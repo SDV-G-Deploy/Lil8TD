@@ -30,6 +30,7 @@ jobs:
           cp index.html _site/
           cp -R src _site/
           cp -R content _site/
+          cp -R assets _site/
           touch _site/.nojekyll
 
       - name: Setup Pages
