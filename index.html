@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Lil8TD Local Slice</title>
+  <link rel="stylesheet" href="./src/render/style.css" />
+</head>
+<body>
+  <main id="app">
+    <section class="topbar">
+      <div><strong>Lil8TD</strong> <span class="muted">Local Playable Foundation</span></div>
+      <div id="hud"></div>
+    </section>
+    <section class="layout">
+      <canvas id="game" width="960" height="640" aria-label="Lil8TD game board"></canvas>
+      <aside class="panel">
+        <h2>Build</h2>
+        <div id="towerButtons"></div>
+        <h2>Selected</h2>
+        <div id="selectedPanel" class="muted">Click a tower or a buildable tile.</div>
+        <h2>Controls</h2>
+        <button id="pauseBtn">Pause</button>
+        <button id="stepBtn">Step 1 tick</button>
+        <button id="botBtn">Bot: off</button>
+        <button id="restartBtn">Restart</button>
+        <p class="help">Click a tower type, then a grass tile. Path tiles are blocked. Towers attack automatically at a fixed 20 Hz sim tick.</p>
+      </aside>
+    </section>
+  </main>
+  <script type="module" src="./src/game/main.js"></script>
+</body>
+</html>

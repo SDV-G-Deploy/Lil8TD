@@ -1,0 +1,368 @@
+{
+  "metadata": {
+    "rulesetId": "lil8td.ruleset.v0",
+    "version": "0.1.0",
+    "status": "provisional_first_machine_readable_baseline",
+    "simulationContract": "docs/SIMULATION_CONTRACT.md",
+    "sourceDocs": [
+      "docs/MVP_SCOPE_DECISIONS.md",
+      "docs/SIMULATION_CONTRACT.md",
+      "docs/DESIGN_FOUNDATION_LOADOUTS.md",
+      "docs/PRESSURE_MECHANIC_V0.md",
+      "docs/ECONOMY_MODEL_V0.md",
+      "docs/BALANCE_BASELINE_V0.md"
+    ],
+    "notes": [
+      "Minimal data seed for local deterministic simulation, not final balance.",
+      "Uses one currency for builds, upgrades, sells, and pressure sends.",
+      "First playable subset: Arrow, Burst, Frost; Grunt, Runner, Brute; one pressure pack."
+    ]
+  },
+  "constants": {
+    "tickHz": 20,
+    "tickMs": 50,
+    "initialLives": 20,
+    "matchSeedDefault": "ruleset-v0-smoke",
+    "pathUnitsPerTile": 1000,
+    "defaultPathLengthUnits": 10000,
+    "checkpointEveryTicks": 20,
+    "targetingDefault": ["furthestPathProgress", "lowestCurrentHp", "lowestEnemyId"],
+    "commandPriority": {
+      "loadout.pick": 10,
+      "ready.confirm": 20,
+      "tower.sell": 30,
+      "tower.build": 40,
+      "tower.upgrade": 50,
+      "pressure.send": 60,
+      "ability.cast": 90
+    }
+  },
+  "economy": {
+    "currencyId": "credits",
+    "startingCurrency": 160,
+    "sellRefundRate": 0.65,
+    "upgradeRefundRate": 0.5,
+    "killRewards": "enemy.rewardCredits",
+    "wavePayouts": "waves[].payoutOnStartCredits",
+    "pressureResource": "credits"
+  },
+  "map": {
+    "mapId": "single_lane_smoke_v0",
+    "version": "0.1.0",
+    "lanes": [
+      {
+        "laneId": "main",
+        "pathLengthUnits": 10000
+      }
+    ],
+    "buildRules": {
+      "gridWidth": 8,
+      "gridHeight": 6,
+      "blockedTiles": [],
+      "pathTilesAreBlocked": true
+    }
+  },
+  "towers": [
+    {
+      "id": "arrow",
+      "name": "Arrow Tower",
+      "role": "baseline_single_target",
+      "buildCost": 50,
+      "canActOnBuildTick": false,
+      "targeting": "default",
+      "levels": [
+        {
+          "level": 1,
+          "upgradeCost": 55,
+          "damage": 18,
+          "cooldownTicks": 20,
+          "rangeUnits": 2600,
+          "attackType": "instant_single"
+        },
+        {
+          "level": 2,
+          "upgradeCost": 85,
+          "damage": 30,
+          "cooldownTicks": 18,
+          "rangeUnits": 2750,
+          "attackType": "instant_single"
+        },
+        {
+          "level": 3,
+          "upgradeCost": null,
+          "damage": 48,
+          "cooldownTicks": 16,
+          "rangeUnits": 2900,
+          "attackType": "instant_single"
+        }
+      ]
+    },
+    {
+      "id": "burst",
+      "name": "Burst Tower",
+      "role": "anti_swarm_small_splash",
+      "buildCost": 100,
+      "canActOnBuildTick": false,
+      "targeting": "default",
+      "levels": [
+        {
+          "level": 1,
+          "upgradeCost": 115,
+          "damage": 26,
+          "cooldownTicks": 36,
+          "rangeUnits": 2100,
+          "attackType": "instant_splash",
+          "splashRadiusUnits": 450,
+          "splashFalloff": 0.65
+        },
+        {
+          "level": 2,
+          "upgradeCost": 165,
+          "damage": 43,
+          "cooldownTicks": 34,
+          "rangeUnits": 2200,
+          "attackType": "instant_splash",
+          "splashRadiusUnits": 500,
+          "splashFalloff": 0.7
+        },
+        {
+          "level": 3,
+          "upgradeCost": null,
+          "damage": 68,
+          "cooldownTicks": 32,
+          "rangeUnits": 2300,
+          "attackType": "instant_splash",
+          "splashRadiusUnits": 550,
+          "splashFalloff": 0.75
+        }
+      ]
+    },
+    {
+      "id": "frost",
+      "name": "Frost Tower",
+      "role": "control_slow_support",
+      "buildCost": 120,
+      "canActOnBuildTick": false,
+      "targeting": "default",
+      "slowStacking": "strongest_wins_equal_or_stronger_refreshes",
+      "levels": [
+        {
+          "level": 1,
+          "upgradeCost": 130,
+          "damage": 7,
+          "cooldownTicks": 30,
+          "rangeUnits": 2350,
+          "attackType": "instant_single",
+          "slowPercent": 35,
+          "slowDurationTicks": 60
+        },
+        {
+          "level": 2,
+          "upgradeCost": 180,
+          "damage": 12,
+          "cooldownTicks": 28,
+          "rangeUnits": 2500,
+          "attackType": "instant_single",
+          "slowPercent": 45,
+          "slowDurationTicks": 70
+        },
+        {
+          "level": 3,
+          "upgradeCost": null,
+          "damage": 18,
+          "cooldownTicks": 26,
+          "rangeUnits": 2650,
+          "attackType": "instant_single",
+          "slowPercent": 52,
+          "slowDurationTicks": 80
+        }
+      ]
+    }
+  ],
+  "enemies": [
+    {
+      "id": "grunt",
+      "name": "Grunt",
+      "role": "baseline_readability_anchor",
+      "maxHp": 100,
+      "speedUnitsPerTick": 40,
+      "rewardCredits": 6,
+      "leakDamage": 1
+    },
+    {
+      "id": "runner",
+      "name": "Runner",
+      "role": "fast_leak_threat",
+      "maxHp": 65,
+      "speedUnitsPerTick": 70,
+      "rewardCredits": 5,
+      "leakDamage": 1
+    },
+    {
+      "id": "brute",
+      "name": "Brute",
+      "role": "slow_high_hp_pressure",
+      "maxHp": 320,
+      "speedUnitsPerTick": 25,
+      "rewardCredits": 14,
+      "leakDamage": 3
+    }
+  ],
+  "pressurePacks": [
+    {
+      "id": "basic_grunt_pressure",
+      "name": "Basic Grunt Pressure",
+      "costCredits": 60,
+      "windupTicks": 120,
+      "cooldownTicks": 160,
+      "maxQueuedPerSender": 2,
+      "visibleDuringWindup": true,
+      "delivery": {
+        "laneId": "main",
+        "spawnSource": "pressure",
+        "groups": [
+          {
+            "enemyId": "grunt",
+            "count": 5,
+            "firstOffsetTicks": 0,
+            "intervalTicks": 16,
+            "rewardCreditsOverride": 4
+          }
+        ]
+      }
+    }
+  ],
+  "wavePhases": [
+    {
+      "id": "early_teach_stable_defense",
+      "waveIndexes": [0, 1, 2]
+    },
+    {
+      "id": "mid_force_role_choice",
+      "waveIndexes": [3, 4, 5]
+    },
+    {
+      "id": "pressure_test_overlap_without_chaos",
+      "waveIndexes": [6]
+    },
+    {
+      "id": "escalation_expose_weak_plans",
+      "waveIndexes": [7]
+    }
+  ],
+  "waves": [
+    {
+      "waveIndex": 0,
+      "startTick": 80,
+      "payoutOnStartCredits": 0,
+      "groups": [
+        { "enemyId": "grunt", "count": 6, "firstOffsetTicks": 0, "intervalTicks": 22, "laneId": "main" }
+      ]
+    },
+    {
+      "waveIndex": 1,
+      "startTick": 420,
+      "payoutOnStartCredits": 60,
+      "groups": [
+        { "enemyId": "grunt", "count": 8, "firstOffsetTicks": 0, "intervalTicks": 20, "laneId": "main" },
+        { "enemyId": "runner", "count": 3, "firstOffsetTicks": 110, "intervalTicks": 26, "laneId": "main" }
+      ]
+    },
+    {
+      "waveIndex": 2,
+      "startTick": 780,
+      "payoutOnStartCredits": 65,
+      "groups": [
+        { "enemyId": "runner", "count": 6, "firstOffsetTicks": 0, "intervalTicks": 24, "laneId": "main" },
+        { "enemyId": "grunt", "count": 6, "firstOffsetTicks": 90, "intervalTicks": 20, "laneId": "main" }
+      ]
+    },
+    {
+      "waveIndex": 3,
+      "startTick": 1160,
+      "payoutOnStartCredits": 75,
+      "groups": [
+        { "enemyId": "grunt", "count": 9, "firstOffsetTicks": 0, "intervalTicks": 18, "laneId": "main" },
+        { "enemyId": "brute", "count": 2, "firstOffsetTicks": 80, "intervalTicks": 80, "laneId": "main" }
+      ]
+    },
+    {
+      "waveIndex": 4,
+      "startTick": 1560,
+      "payoutOnStartCredits": 80,
+      "groups": [
+        { "enemyId": "runner", "count": 8, "firstOffsetTicks": 0, "intervalTicks": 20, "laneId": "main" },
+        { "enemyId": "brute", "count": 3, "firstOffsetTicks": 100, "intervalTicks": 70, "laneId": "main" }
+      ]
+    },
+    {
+      "waveIndex": 5,
+      "startTick": 1980,
+      "payoutOnStartCredits": 90,
+      "groups": [
+        { "enemyId": "grunt", "count": 14, "firstOffsetTicks": 0, "intervalTicks": 16, "laneId": "main" },
+        { "enemyId": "runner", "count": 6, "firstOffsetTicks": 120, "intervalTicks": 18, "laneId": "main" },
+        { "enemyId": "brute", "count": 2, "firstOffsetTicks": 180, "intervalTicks": 75, "laneId": "main" }
+      ]
+    },
+    {
+      "waveIndex": 6,
+      "startTick": 2440,
+      "payoutOnStartCredits": 95,
+      "pressureEnabledForSmoke": true,
+      "suggestedPressureSendTick": 2380,
+      "groups": [
+        { "enemyId": "grunt", "count": 10, "firstOffsetTicks": 0, "intervalTicks": 18, "laneId": "main" },
+        { "enemyId": "runner", "count": 8, "firstOffsetTicks": 80, "intervalTicks": 18, "laneId": "main" },
+        { "enemyId": "brute", "count": 3, "firstOffsetTicks": 160, "intervalTicks": 65, "laneId": "main" }
+      ]
+    },
+    {
+      "waveIndex": 7,
+      "startTick": 2940,
+      "payoutOnStartCredits": 110,
+      "groups": [
+        { "enemyId": "grunt", "count": 16, "firstOffsetTicks": 0, "intervalTicks": 15, "laneId": "main" },
+        { "enemyId": "runner", "count": 10, "firstOffsetTicks": 90, "intervalTicks": 16, "laneId": "main" },
+        { "enemyId": "brute", "count": 5, "firstOffsetTicks": 160, "intervalTicks": 55, "laneId": "main" }
+      ]
+    }
+  ],
+  "loadouts": [
+    {
+      "id": "balanced_core",
+      "name": "Balanced Core",
+      "archetype": "stable_baseline_doctrine",
+      "startingTowerAccess": ["arrow", "burst"],
+      "unlocks": [
+        { "kind": "tower", "id": "frost", "atWaveIndex": 2 },
+        { "kind": "pressurePack", "id": "basic_grunt_pressure", "atWaveIndex": 3 }
+      ],
+      "modifiers": {}
+    },
+    {
+      "id": "tempo_control",
+      "name": "Tempo Control",
+      "archetype": "positioning_and_efficiency_doctrine",
+      "startingTowerAccess": ["arrow", "frost"],
+      "unlocks": [
+        { "kind": "tower", "id": "burst", "atWaveIndex": 2 },
+        { "kind": "pressurePack", "id": "basic_grunt_pressure", "atWaveIndex": 3 }
+      ],
+      "modifiers": {}
+    },
+    {
+      "id": "pressure_forge",
+      "name": "Pressure Forge",
+      "archetype": "aggressive_conversion_doctrine",
+      "startingTowerAccess": ["arrow", "burst"],
+      "unlocks": [
+        { "kind": "pressurePack", "id": "basic_grunt_pressure", "atWaveIndex": 2 },
+        { "kind": "tower", "id": "frost", "atWaveIndex": 3 }
+      ],
+      "modifiers": {
+        "pressureCostMultiplier": 0.9
+      }
+    }
+  ]
+}

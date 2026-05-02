@@ -1,0 +1,11 @@
+import { readFile } from 'node:fs/promises';
+import { indexContent } from '../src/sim/content.js';
+import { createInitialState, step } from '../src/sim/sim.js';
+import { stateHash } from '../src/sim/hash.js';
+import { createAutoplayer, autoplayerCommands } from '../src/ai/autoplayer.js';
+const ruleset = JSON.parse(await readFile('content/ruleset.v0.json', 'utf8'));
+const content = indexContent(ruleset);
+let state = createInitialState(content); const bot = createAutoplayer();
+for (let i = 0; i < 7000 && !state.result; i++) state = step(state, autoplayerCommands(bot, state, content), content);
+console.log(JSON.stringify({ result: state.result, tick: state.tick, lives: state.lives, currency: state.currency, towers: state.towers.length, hash: stateHash(state) }, null, 2));
+if (!state.result) process.exitCode = 1;
