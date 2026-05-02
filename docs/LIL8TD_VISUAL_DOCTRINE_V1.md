@@ -220,3 +220,32 @@ Avoid:
 ## 12. Relationship to older docs
 
 `docs/PIXEL_STYLE_GUIDE_V0.md` remains useful historical foundation, but this V1 doctrine is now the source of truth for visual direction and review language.
+
+---
+
+## 13. Corrective hand-drawn pass — May 2026
+
+Why it was necessary:
+
+- The first live visual demo still read as a clean prototype board with better colors, not as charming game art.
+- Prior changes were too subtle at mobile screenshot size: tile tuning and procedural polish improved neatness but did not create a strong handmade identity.
+- The next useful step was therefore not more cleanup; it was a visible hand-drawn asset pass with bigger shapes and personality.
+
+What changed in this pass:
+
+- Added `assets/art-handdrawn/lil8td-handdrawn-v1.png`, a new static pixel atlas that preserves the lightweight Pages-friendly pipeline.
+- Replaced the renderer atlas source with the hand-drawn atlas.
+- Grass/buildable tiles now use larger painted moss fields, irregular outlines, weed/stone landmarks, and broader brush strokes instead of tiny procedural-feeling texture.
+- Path tiles now have a meandering compacted-road center, darker shoulders, chunky stones, and stronger warm dirt material so the lane reads first.
+- Towers received stronger role silhouettes: arrow has an oversized bow/bolt and flag, burst has a squat cannon/ember core, frost has a tall crystal obelisk.
+- Enemies received more character-forward silhouettes: grunt as small shield soldier, runner as low red forward-leaning unit, brute as wide purple horned mass.
+- Board seams were reduced so the atlas material carries the art read instead of a sterile grid.
+- UI frame ornament pieces were redrawn to match the carved/handmade direction.
+
+Still remaining for future art passes:
+
+- Add per-upgrade tower stages so level changes are visible beyond the badge.
+- Add attack-impact micro-sprites and muzzle/ice/arrow read improvements without changing sim timing.
+- Expand UI atlas usage into buttons/cards instead of relying mostly on CSS chrome.
+- Create more terrain transition logic if the map grows beyond the current single-lane board.
+- Do a second review from live mobile screenshots; the success criterion is obvious charm at a glance, not subtle asset-diff correctness.

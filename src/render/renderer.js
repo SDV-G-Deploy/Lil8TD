@@ -234,10 +234,11 @@ function drawPathTile(ctx, x, y, w, h, gx, gy, m) {
 }
 
 function drawTileGrid(ctx, x, y, w, h, gx, gy) {
-  ctx.strokeStyle = tileKind(gx, gy) === 'path' ? 'rgba(255, 231, 173, .13)' : PALETTE.grid;
-  ctx.lineWidth = 2;
+  // Keep only a soft hand-drawn seam; the atlas now carries the material read.
+  ctx.strokeStyle = tileKind(gx, gy) === 'path' ? 'rgba(255, 231, 173, .055)' : 'rgba(242, 222, 162, .045)';
+  ctx.lineWidth = 1;
   ctx.strokeRect(Math.floor(x) + 1, Math.floor(y) + 1, Math.floor(w) - 2, Math.floor(h) - 2);
-  ctx.strokeStyle = 'rgba(0, 0, 0, .16)';
+  ctx.strokeStyle = 'rgba(0, 0, 0, .09)';
   ctx.lineWidth = 1;
   ctx.strokeRect(Math.floor(x) + 4, Math.floor(y) + 4, Math.floor(w) - 8, Math.floor(h) - 8);
 }
@@ -661,7 +662,7 @@ function pixelDiamond(ctx, x, y, r, color) {
 function makeArtAtlas() {
   if (typeof Image === 'undefined') return { image: null };
   const image = new Image();
-  image.src = './assets/art-v1/lil8td-art-v1.png';
+  image.src = './assets/art-handdrawn/lil8td-handdrawn-v1.png';
   return { image };
 }
 
