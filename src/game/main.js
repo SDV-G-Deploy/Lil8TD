@@ -34,12 +34,12 @@ function wireSelectedButtons() {
   if (sell) sell.onclick = () => { apply([{ type:'tower.sell', towerId:t.id, clientCommandSeq:ui.seq++ }]); ui.selectedTowerId = null; };
 }
 function apply(commands) { state = step(state, commands, content); render(); }
-function render() {
+function render(alpha = 0) {
   hud.innerHTML = `Tick ${state.tick} · Credits <strong>${state.currency}</strong> · Lives <strong>${state.lives}</strong> · Enemies ${state.enemies.length} · ${state.result ? `<span class="${state.result.outcome==='win'?'ok':'danger'}">${state.result.outcome}</span>` : 'running'}`;
-  selectedPanel.innerHTML = selectedInfo(); wireSelectedButtons(); renderer.draw(state, ui);
+  selectedPanel.innerHTML = selectedInfo(); wireSelectedButtons(); renderer.draw(state, ui, alpha);
 }
-canvas.addEventListener('mousemove', e => { ui.hover = renderer.tileAt(e); renderer.draw(state, ui); });
-canvas.addEventListener('mouseleave', () => { ui.hover = null; renderer.draw(state, ui); });
+canvas.addEventListener('mousemove', e => { ui.hover = renderer.tileAt(e); renderer.draw(state, ui, 0); });
+canvas.addEventListener('mouseleave', () => { ui.hover = null; renderer.draw(state, ui, 0); });
 canvas.addEventListener('click', e => {
   const tile = renderer.tileAt(e); const tower = state.towers.find(t => t.tileX === tile.x && t.tileY === tile.y);
   if (tower) { ui.selectedTowerId = tower.id; ui.buildType = null; renderButtons(); render(); return; }
@@ -50,5 +50,5 @@ document.querySelector('#stepBtn').onclick = () => { if (ui.paused) apply(ui.bot
 document.querySelector('#botBtn').onclick = () => { ui.bot = !ui.bot; document.querySelector('#botBtn').textContent = `Bot: ${ui.bot ? 'on' : 'off'}`; };
 document.querySelector('#restartBtn').onclick = reset;
 let acc = 0, last = performance.now();
-function loop(now) { acc += now - last; last = now; let changed = false; while (!ui.paused && !state.result && acc >= content.constants.tickMs) { state = step(state, ui.bot ? autoplayerCommands(bot, state, content) : [], content); acc -= content.constants.tickMs; changed = true; } if (changed) render(); else renderer.draw(state, ui); requestAnimationFrame(loop); }
+function loop(now) { acc += now - last; last = now; let changed = false; while (!ui.paused && !state.result && acc >= content.constants.tickMs) { state = step(state, ui.bot ? autoplayerCommands(bot, state, content) : [], content); acc -= content.constants.tickMs; changed = true; } const alpha = ui.paused || state.result ? 0 : Math.max(0, Math.min(1, acc / content.constants.tickMs)); if (changed) render(alpha); else renderer.draw(state, ui, alpha); requestAnimationFrame(loop); }
 reset(); requestAnimationFrame(loop);

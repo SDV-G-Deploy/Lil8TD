@@ -1,6 +1,8 @@
 # Lil8TD Pixel Style Guide V0 — Visual Foundation
 
-Status: taste-polish foundation for the public canvas demo. This document is no longer just a list of rendered details; it is the visual grammar for making Lil8TD feel charming, cohesive, nostalgic, and readable without introducing a heavy art pipeline.
+Status: historical V0 foundation. The active visual source of truth is now `docs/LIL8TD_VISUAL_DOCTRINE_V1.md`.
+
+This document remains useful background for the public canvas demo. The V1 doctrine supersedes it where the two differ.
 
 Update: the project has started its first real asset migration. See `docs/ART_FOUNDATION_MIGRATION_PLAN.md` for the phased plan and `assets/art-v1/lil8td-art-v1.png` for the first static pixel atlas.
 

@@ -10,27 +10,28 @@ def poly(points,c): d.polygon([(x*S,y*S) for x,y in points],fill=c)
 def line(points,c,w=1): d.line([(x*S,y*S) for x,y in points],fill=c,width=w*S)
 
 def grass(x,y,base,inner,accent,seed):
-    rect(x,y,x+32,y+32,'#102417'); rect(x+2,y+2,x+30,y+30,base); rect(x+4,y+5,x+28,y+10,'#2b5530'); rect(x+4,y+23,x+28,y+28,'#142a19')
-    for i in range(9):
-        px=x+5+((seed*7+i*11)%22); py=y+6+((seed*13+i*5)%20)
-        c=[inner,'#4e7037','#718743','#657542'][i%4]
-        rect(px,py,px+2+(i%3),py+1,c)
-    if seed%2: rect(x+20,y+19,x+25,y+21,'#8a7d60'); rect(x+21,y+18,x+24,y+19,'#b6a06a')
-    if seed%3==0: rect(x+8,y+17,x+11,y+18,'#d6ac67')
+    rect(x,y,x+32,y+32,'#0f2015'); rect(x+2,y+2,x+30,y+30,base); rect(x+5,y+6,x+27,y+10,'#254b2c'); rect(x+5,y+23,x+27,y+27,'#142a19')
+    # Calm grouped moss marks: fewer, lower contrast, handmade rather than noisy.
+    for i in range(4):
+        px=x+6+((seed*7+i*13)%20); py=y+8+((seed*11+i*7)%16)
+        c=[inner,'#385b32','#617540','#4b6336'][i%4]
+        rect(px,py,px+3+(i%2),py+1,c)
+    if seed%2: rect(x+20,y+20,x+25,y+22,'#746b52'); rect(x+21,y+19,x+24,y+20,'#a38d5f')
+    if seed%3==0: rect(x+8,y+17,x+11,y+18,'#b99055')
 
 def path(x,y,seed):
-    rect(x,y,x+32,y+32,'#3f2a1b'); rect(x+2,y+4,x+30,y+28,'#654322'); rect(x+5,y+7,x+27,y+25,'#966634')
-    rect(x+6+(seed%4),y+13,x+26,y+16,'#c58c49'); rect(x+8,y+18,x+24,y+20,'#7a4c26')
-    for i in range(5):
+    rect(x,y,x+32,y+32,'#3a2619'); rect(x+2,y+5,x+30,y+27,'#5d3a20'); rect(x+6,y+8,x+26,y+24,'#8e5c31')
+    rect(x+7+(seed%3),y+13,x+25,y+15,'#bc8244'); rect(x+9,y+18,x+23,y+20,'#704522')
+    for i in range(2):
         px=x+5+((seed*5+i*9)%21); py=y+6+((seed*3+i*7)%20)
-        rect(px,py,px+2,py+1, '#dfb46c' if i%2 else '#51311d')
-    for px in range(x+3+(seed%3), x+29, 8):
-        rect(px,y+2,px+5,y+4,'#8a7d60'); rect(px+2,y+28,px+7,y+30,'#78694d')
+        rect(px,py,px+3,py+1, '#d4a35e' if i%2 else '#51311d')
+    for px in range(x+4+(seed%3), x+28, 10):
+        rect(px,y+3,px+5,y+5,'#81724f'); rect(px+2,y+27,px+8,y+29,'#6e6047')
 
 def tower_base(x,y,stone,roof,trim):
-    rect(x+6,y+48,x+42,y+53,'#00000088'); rect(x+10,y+34,x+38,y+48,'#1d1512'); rect(x+13,y+17,x+35,y+42,stone)
-    rect(x+11,y+26,x+37,y+30,'#24242a'); rect(x+14,y+20,x+18,y+24,'#f4e7c044'); rect(x+30,y+20,x+34,y+24,'#f4e7c044')
-    rect(x+9,y+10,x+39,y+18,roof); rect(x+12,y+7,x+36,y+10,trim); rect(x+13,y+18,x+35,y+20,'#ffffff22')
+    rect(x+5,y+48,x+43,y+54,'#00000088'); rect(x+8,y+35,x+40,y+49,'#1b120f'); rect(x+11,y+16,x+37,y+43,stone)
+    rect(x+10,y+27,x+38,y+31,'#222228'); rect(x+14,y+20,x+19,y+24,'#f4e7c044'); rect(x+29,y+20,x+34,y+24,'#f4e7c044')
+    rect(x+8,y+10,x+40,y+18,roof); rect(x+11,y+6,x+37,y+10,trim); rect(x+12,y+18,x+36,y+20,'#ffffff22')
 
 def tower_arrow(x,y):
     tower_base(x,y,'#5c5960','#876735','#fff1a1'); rect(x+22,y+0,x+26,y+15,'#5b4325'); rect(x+12,y+4,x+36,y+8,'#e3c85d'); rect(x+33,y+0,x+37,y+14,'#e3c85d'); rect(x+38,y+3,x+46,y+6,'#f8e9a3')

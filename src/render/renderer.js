@@ -65,7 +65,7 @@ export function makeRenderer(canvas, content) {
   const ctx = canvas.getContext('2d');
   return {
     get tile() { return boardMetrics(canvas, content).tile; },
-    draw(state, ui) { draw(ctx, canvas, content, state, ui, boardMetrics(canvas, content)); },
+    draw(state, ui, alpha = 0) { draw(ctx, canvas, content, state, ui, boardMetrics(canvas, content), alpha); },
     tileAt(evt) {
       const m = boardMetrics(canvas, content);
       const r = canvas.getBoundingClientRect();
@@ -94,7 +94,7 @@ function boardMetrics(canvas, content) {
   return { gridW, gridH, cellW, cellH, tile: Math.min(cellW, cellH) };
 }
 
-function draw(ctx, canvas, content, state, ui, m) {
+function draw(ctx, canvas, content, state, ui, m, alpha = 0) {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = PALETTE.void;
@@ -104,8 +104,8 @@ function draw(ctx, canvas, content, state, ui, m) {
   drawTiles(ctx, content, m);
   drawPathOrnaments(ctx, content, m);
   drawBuildPins(ctx, content, state, m);
-  drawEffects(ctx, content, state, m);
-  drawEnemies(ctx, content, state, m);
+  drawEffects(ctx, content, state, m, alpha);
+  drawEnemies(ctx, content, state, m, alpha);
   drawTowers(ctx, content, state, ui, m);
   drawHover(ctx, content, state, ui, m);
   drawMapFrame(ctx, canvas, m);
@@ -141,24 +141,24 @@ function drawTiles(ctx, content, m) {
 
 function drawGrassTile(ctx, x, y, w, h, gx, gy, m) {
   const n = hash(gx, gy);
-  const family = (gx * 3 + gy * 5 + n) % 9;
-  ctx.fillStyle = family < 2 ? PALETTE.grassDeep : (gx + gy) % 2 === 0 ? PALETTE.grassDark : '#17321d';
+  const family = (gx * 3 + gy * 5 + n) % 11;
+  ctx.fillStyle = family < 2 ? PALETTE.grassDeep : (gx + gy) % 2 === 0 ? '#18331f' : '#162e1c';
   ctx.fillRect(x, y, w, h);
 
-  ctx.fillStyle = n % 5 === 0 ? '#2b5530' : n % 4 === 0 ? '#1f4427' : PALETTE.grass;
-  ctx.fillRect(x + 3, y + 3, w - 6, h - 6);
+  ctx.fillStyle = n % 5 === 0 ? '#23482a' : n % 4 === 0 ? '#1f3e25' : '#214629';
+  ctx.fillRect(x + 4, y + 4, w - 8, h - 8);
 
   ctx.fillStyle = PALETTE.warmShadow;
-  ctx.fillRect(x + 3, y + h - 11, w - 6, 8);
+  ctx.fillRect(x + 5, y + h - 12, w - 10, 7);
   ctx.fillStyle = 'rgba(239, 212, 141, .075)';
-  ctx.fillRect(x + 5, y + 6, w - 10, 5);
+  ctx.fillRect(x + 7, y + 7, w - 14, 4);
 
   const step = Math.max(3, Math.floor(m.tile / 22));
-  const flecks = 3 + (n % 4);
+  const flecks = 1 + (n % 3);
   for (let i = 0; i < flecks; i++) {
     const px = x + 10 + ((n + i * 29 + gx * 17) % Math.max(12, Math.floor(w - 22)));
     const py = y + 12 + ((n * 3 + i * 19 + gy * 23) % Math.max(12, Math.floor(h - 26)));
-    const kind = (n + i * 2) % 10;
+    const kind = (n + i * 2) % 12;
     if (kind === 0) {
       ctx.fillStyle = PALETTE.flower;
       ctx.fillRect(Math.floor(px), Math.floor(py), step * 2, step);
@@ -167,7 +167,7 @@ function drawGrassTile(ctx, x, y, w, h, gx, gy, m) {
       ctx.fillRect(Math.floor(px), Math.floor(py), step * 3, step);
       if (kind === 1) ctx.fillRect(Math.floor(px + step), Math.floor(py - step), step, step * 2);
     } else {
-      ctx.fillStyle = kind === 4 ? '#315c2e' : '#4e7037';
+      ctx.fillStyle = kind === 4 ? '#2e5330' : '#425f34';
       ctx.fillRect(Math.floor(px), Math.floor(py), step, step);
     }
   }
@@ -189,13 +189,13 @@ function drawPathTile(ctx, x, y, w, h, gx, gy, m) {
   ctx.fillStyle = PALETTE.pathRim;
   ctx.fillRect(x, y, w, h);
 
-  ctx.fillStyle = '#2d1d14';
-  ctx.fillRect(x + 2, y + 5, w - 4, 12);
-  ctx.fillRect(x + 2, y + h - 17, w - 4, 12);
+  ctx.fillStyle = '#2b1b13';
+  ctx.fillRect(x + 2, y + 6, w - 4, 10);
+  ctx.fillRect(x + 2, y + h - 16, w - 4, 10);
   ctx.fillStyle = PALETTE.pathDark;
   ctx.fillRect(x + 2, y + 12, w - 4, h - 24);
-  ctx.fillStyle = gx % 2 === 0 ? PALETTE.path : '#8d5d31';
-  ctx.fillRect(x + 8, y + 17, w - 16, h - 34);
+  ctx.fillStyle = gx % 2 === 0 ? '#916033' : '#87572e';
+  ctx.fillRect(x + 8, y + 16, w - 16, h - 32);
 
   // A soft diagonal value rhythm keeps the road handcrafted without losing the lane read.
   ctx.fillStyle = 'rgba(80, 47, 24, .22)';
@@ -204,8 +204,8 @@ function drawPathTile(ctx, x, y, w, h, gx, gy, m) {
   ctx.fillRect(x + w * .48, y + 18, w * .16, h - 36);
 
   // crafted worn center, like a compact old RTS road with packed dust and plank/stone breaks
-  ctx.fillStyle = 'rgba(227, 183, 104, .36)';
-  ctx.fillRect(x + 12, y + h * .42, w - 24, 5);
+  ctx.fillStyle = 'rgba(227, 183, 104, .30)';
+  ctx.fillRect(x + 13, y + h * .43, w - 26, 4);
   ctx.fillStyle = 'rgba(55, 32, 19, .30)';
   ctx.fillRect(x + 10, y + h - 25, w - 20, 6);
   ctx.fillStyle = PALETTE.pathLight;
@@ -213,7 +213,7 @@ function drawPathTile(ctx, x, y, w, h, gx, gy, m) {
   ctx.fillRect(x + ((gx % 3) ? w * .24 : w * .62), y + h - 34, w * .18, 4);
 
   ctx.fillStyle = 'rgba(244, 225, 164, .32)';
-  for (let i = 0; i < 4; i++) {
+  for (let i = 0; i < 2; i++) {
     const px = x + 18 + ((n + i * 31) % Math.max(12, Math.floor(w - 38)));
     const py = y + 22 + ((n * 2 + i * 17) % Math.max(12, Math.floor(h - 44)));
     ctx.fillRect(Math.floor(px), Math.floor(py), Math.max(3, m.tile * .045), Math.max(2, m.tile * .025));
@@ -300,7 +300,7 @@ function drawTowers(ctx, content, state, ui, m) {
 
     if (ui.selectedTowerId === t.id) drawRange(ctx, x, y, lvl.rangeUnits / 1000 * ((m.cellW + m.cellH) / 2), meta);
     const spriteName = t.typeId === 'arrow' ? 'towerArrow' : t.typeId === 'burst' ? 'towerBurst' : 'towerFrost';
-    const drewAsset = drawSprite(ctx, spriteName, x - s * .42, y - s * .58, s * .84, s * .98);
+    const drewAsset = drawSprite(ctx, spriteName, x - s * .46, y - s * .64, s * .92, s * 1.08);
     if (!drewAsset) {
       drawTowerBase(ctx, x, y, s, meta, t.level);
       if (t.typeId === 'arrow') drawArrowTower(ctx, x, y, s, meta);
@@ -408,21 +408,21 @@ function drawTowerBadge(ctx, x, y, s, level, meta) {
   ctx.fillText(String(level), x, y + s * .24);
 }
 
-function drawEnemies(ctx, content, state, m) {
+function drawEnemies(ctx, content, state, m, alpha = 0) {
   for (const e of state.enemies) {
-    const p = enemyPx(e, content, m);
+    const p = enemyPx(e, content, m, state, alpha);
     const meta = ENEMY_META[e.typeId] ?? ENEMY_META.grunt;
     const s = Math.min(m.cellW, m.cellH) * meta.size;
+    const bob = enemyBob(e, state, alpha);
     ctx.fillStyle = PALETTE.shadow;
     ctx.fillRect(p.x - s * .48, p.y + s * .42, s * .96, 6);
 
     const spriteName = e.typeId === 'runner' ? 'enemyRunner' : e.typeId === 'brute' ? 'enemyBrute' : 'enemyGrunt';
-    const bob = e.typeId === 'runner' && state.tick % 12 < 6 ? 2 : 0;
     const drewAsset = drawSprite(ctx, spriteName, p.x - s * .56, p.y - s * .68 + bob, s * 1.12, s * 1.12);
     if (!drewAsset) {
-      if (e.typeId === 'runner') drawRunner(ctx, p.x, p.y, s, meta, state.tick);
-      else if (e.typeId === 'brute') drawBrute(ctx, p.x, p.y, s, meta);
-      else drawGrunt(ctx, p.x, p.y, s, meta);
+      if (e.typeId === 'runner') drawRunner(ctx, p.x, p.y + bob, s, meta, state.tick + alpha);
+      else if (e.typeId === 'brute') drawBrute(ctx, p.x, p.y + bob, s, meta);
+      else drawGrunt(ctx, p.x, p.y + bob, s, meta);
     }
 
     drawHealth(ctx, p.x, p.y - s * .88, Math.max(24, s * 1.18), 7, Math.max(0, e.hp / e.maxHp));
@@ -501,14 +501,14 @@ function drawSlowOverlay(ctx, x, y, s) {
   pixelDiamond(ctx, x + s * .45, y - s * .42, s * .12, '#dcfbff');
 }
 
-function drawEffects(ctx, content, state, m) {
+function drawEffects(ctx, content, state, m, alpha = 0) {
   for (const ev of state.events ?? []) {
     if (ev.type === 'tower.fired') {
       const tower = state.towers.find(t => t.id === ev.towerId);
       const enemy = state.enemies.find(e => e.id === ev.targetId);
       if (!tower || !enemy) continue;
       const from = { x: (tower.tileX + .5) * m.cellW, y: (tower.tileY + .5) * m.cellH - m.tile * .20 };
-      const to = enemyPx(enemy, content, m);
+      const to = enemyPx(enemy, content, m, state, alpha);
       const meta = TOWER_META[tower.typeId] ?? TOWER_META.arrow;
       if (tower.typeId === 'arrow') drawBolt(ctx, from, to, meta.color);
       else if (tower.typeId === 'burst') drawBlast(ctx, from, to, meta);
@@ -517,7 +517,7 @@ function drawEffects(ctx, content, state, m) {
     if (ev.type === 'enemy.killed') {
       const enemy = state.enemies.find(e => e.id === ev.enemyId);
       if (enemy) {
-        const p = enemyPx(enemy, content, m);
+        const p = enemyPx(enemy, content, m, state, alpha);
         pixelDiamond(ctx, p.x, p.y, m.tile * .18, '#ffe38a');
         ctx.fillStyle = 'rgba(255, 236, 166, .55)';
         ctx.fillRect(p.x - 18, p.y - 2, 36, 4);
@@ -628,11 +628,23 @@ function drawResult(ctx, canvas, outcome) {
   ctx.fillText(outcome.toUpperCase(), canvas.width / 2, canvas.height / 2);
 }
 
-function enemyPx(e, content, m) {
+function enemyPx(e, content, m, state = null, alpha = 0) {
+  let progress = e.progress;
+  if (state && !e.killed && !e.leaked) {
+    const def = content.enemies[e.typeId];
+    const slowPct = e.slow && e.slow.untilTick >= state.tick ? e.slow.percent : 0;
+    progress += Math.max(1, Math.floor(def.speedUnitsPerTick * (100 - slowPct) / 100)) * Math.max(0, Math.min(1, alpha));
+  }
   return {
-    x: Math.min(m.gridW * m.cellW, (e.progress / content.map.lanes[0].pathLengthUnits) * m.gridW * m.cellW),
+    x: Math.min(m.gridW * m.cellW, (progress / content.map.lanes[0].pathLengthUnits) * m.gridW * m.cellW),
     y: 2.5 * m.cellH
   };
+}
+
+function enemyBob(e, state, alpha) {
+  const speed = e.typeId === 'runner' ? 1.8 : e.typeId === 'brute' ? .7 : 1.1;
+  const amp = e.typeId === 'brute' ? 1.1 : e.typeId === 'runner' ? 2.2 : 1.5;
+  return Math.round(Math.sin((state.tick + alpha) * speed * .55 + e.num) * amp);
 }
 
 function pixelDiamond(ctx, x, y, r, color) {
