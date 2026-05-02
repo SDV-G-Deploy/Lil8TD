@@ -2,6 +2,8 @@
 
 Status: taste-polish foundation for the public canvas demo. This document is no longer just a list of rendered details; it is the visual grammar for making Lil8TD feel charming, cohesive, nostalgic, and readable without introducing a heavy art pipeline.
 
+Update: the project has started its first real asset migration. See `docs/ART_FOUNDATION_MIGRATION_PLAN.md` for the phased plan and `assets/art-v1/lil8td-art-v1.png` for the first static pixel atlas.
+
 ## Artistic north star
 
 Lil8TD should feel like a tiny old-fantasy strategy board: mossy build fields, a hand-worn road, squat fortified toy towers, small readable monsters, and carved wood/bronze UI chrome. The beauty target is **lovable miniature battlefield**, not realistic terrain and not noisy pixel wallpaper.
@@ -163,3 +165,12 @@ Lil8TD’s charm is the contrast between tiny deterministic systems and a warm t
 5. If the screen feels busy, remove or lower terrain detail before simplifying gameplay signals.
 6. Before adding assets, ask whether procedural rectangles/diamonds can express the idea cleanly.
 7. Test at actual browser size; taste is judged at play scale, not zoomed-in code scale.
+
+## Asset migration addendum
+
+Procedural canvas drawing remains useful for overlays, effects, and fallback rendering, but core charm should increasingly live in authored sprites. The first atlas pass establishes this rule:
+
+- terrain, path, towers, enemies, and UI ornaments should become reusable pixel assets;
+- procedural drawing may support them but should not be the primary source of identity;
+- each new asset must preserve the same palette, silhouette, and readability doctrine above;
+- GitHub Pages stays lightweight: committed static images, no mandatory heavy art build step.

@@ -51,6 +51,16 @@ const ENEMY_META = {
   brute: { color: PALETTE.brute, shade: '#46306f', eye: '#1d1132', size: .49 }
 };
 
+const ART_SCALE = 4;
+const ART_ATLAS = makeArtAtlas();
+const ART_SPRITES = {
+  grass0: sprite(0, 0, 32, 32), grass1: sprite(32, 0, 32, 32), grass2: sprite(64, 0, 32, 32), grass3: sprite(96, 0, 32, 32),
+  path0: sprite(128, 0, 32, 32), path1: sprite(160, 0, 32, 32), path2: sprite(192, 0, 32, 32), path3: sprite(224, 0, 32, 32),
+  towerArrow: sprite(0, 40, 48, 56), towerBurst: sprite(48, 40, 48, 56), towerFrost: sprite(96, 40, 48, 56),
+  enemyGrunt: sprite(0, 104, 32, 32), enemyRunner: sprite(32, 104, 32, 32), enemyBrute: sprite(64, 104, 32, 32),
+  uiCorner: sprite(0, 144, 16, 16)
+};
+
 export function makeRenderer(canvas, content) {
   const ctx = canvas.getContext('2d');
   return {
@@ -119,8 +129,11 @@ function drawTiles(ctx, content, m) {
   for (let y = 0; y < m.gridH; y++) {
     for (let x = 0; x < m.gridW; x++) {
       const px = x * m.cellW, py = y * m.cellH;
-      if (tileKind(x, y) === 'path') drawPathTile(ctx, px, py, m.cellW, m.cellH, x, y, m);
-      else drawGrassTile(ctx, px, py, m.cellW, m.cellH, x, y, m);
+      if (tileKind(x, y) === 'path') {
+        if (!drawSprite(ctx, `path${hash(x, y) % 4}`, px, py, m.cellW, m.cellH)) drawPathTile(ctx, px, py, m.cellW, m.cellH, x, y, m);
+      } else {
+        if (!drawSprite(ctx, `grass${hash(x, y) % 4}`, px, py, m.cellW, m.cellH)) drawGrassTile(ctx, px, py, m.cellW, m.cellH, x, y, m);
+      }
       drawTileGrid(ctx, px, py, m.cellW, m.cellH, x, y);
     }
   }
@@ -286,10 +299,14 @@ function drawTowers(ctx, content, state, ui, m) {
     const s = Math.min(m.cellW, m.cellH);
 
     if (ui.selectedTowerId === t.id) drawRange(ctx, x, y, lvl.rangeUnits / 1000 * ((m.cellW + m.cellH) / 2), meta);
-    drawTowerBase(ctx, x, y, s, meta, t.level);
-    if (t.typeId === 'arrow') drawArrowTower(ctx, x, y, s, meta);
-    else if (t.typeId === 'burst') drawBurstTower(ctx, x, y, s, meta);
-    else drawFrostTower(ctx, x, y, s, meta);
+    const spriteName = t.typeId === 'arrow' ? 'towerArrow' : t.typeId === 'burst' ? 'towerBurst' : 'towerFrost';
+    const drewAsset = drawSprite(ctx, spriteName, x - s * .42, y - s * .58, s * .84, s * .98);
+    if (!drewAsset) {
+      drawTowerBase(ctx, x, y, s, meta, t.level);
+      if (t.typeId === 'arrow') drawArrowTower(ctx, x, y, s, meta);
+      else if (t.typeId === 'burst') drawBurstTower(ctx, x, y, s, meta);
+      else drawFrostTower(ctx, x, y, s, meta);
+    }
     drawTowerBadge(ctx, x, y, s, t.level, meta);
   }
 }
@@ -399,9 +416,14 @@ function drawEnemies(ctx, content, state, m) {
     ctx.fillStyle = PALETTE.shadow;
     ctx.fillRect(p.x - s * .48, p.y + s * .42, s * .96, 6);
 
-    if (e.typeId === 'runner') drawRunner(ctx, p.x, p.y, s, meta, state.tick);
-    else if (e.typeId === 'brute') drawBrute(ctx, p.x, p.y, s, meta);
-    else drawGrunt(ctx, p.x, p.y, s, meta);
+    const spriteName = e.typeId === 'runner' ? 'enemyRunner' : e.typeId === 'brute' ? 'enemyBrute' : 'enemyGrunt';
+    const bob = e.typeId === 'runner' && state.tick % 12 < 6 ? 2 : 0;
+    const drewAsset = drawSprite(ctx, spriteName, p.x - s * .56, p.y - s * .68 + bob, s * 1.12, s * 1.12);
+    if (!drewAsset) {
+      if (e.typeId === 'runner') drawRunner(ctx, p.x, p.y, s, meta, state.tick);
+      else if (e.typeId === 'brute') drawBrute(ctx, p.x, p.y, s, meta);
+      else drawGrunt(ctx, p.x, p.y, s, meta);
+    }
 
     drawHealth(ctx, p.x, p.y - s * .88, Math.max(24, s * 1.18), 7, Math.max(0, e.hp / e.maxHp));
     if (e.slow) drawSlowOverlay(ctx, p.x, p.y, s);
@@ -584,8 +606,10 @@ function drawMapFrame(ctx, canvas) {
   ctx.lineWidth = 2;
   ctx.strokeRect(21, 21, canvas.width - 42, canvas.height - 42);
   for (const [x, y] of [[24, 24], [canvas.width - 24, 24], [24, canvas.height - 24], [canvas.width - 24, canvas.height - 24]]) {
-    pixelDiamond(ctx, x, y, 8, '#d4b374');
-    pixelDiamond(ctx, x, y, 4, '#4b3320');
+    if (!drawSprite(ctx, 'uiCorner', x - 8, y - 8, 16, 16)) {
+      pixelDiamond(ctx, x, y, 8, '#d4b374');
+      pixelDiamond(ctx, x, y, 4, '#4b3320');
+    }
   }
 }
 
@@ -620,6 +644,25 @@ function pixelDiamond(ctx, x, y, r, color) {
   ctx.lineTo(x - r, y);
   ctx.closePath();
   ctx.fill();
+}
+
+function makeArtAtlas() {
+  if (typeof Image === 'undefined') return { image: null };
+  const image = new Image();
+  image.src = './assets/art-v1/lil8td-art-v1.png';
+  return { image };
+}
+
+function sprite(x, y, w, h) {
+  return { x: x * ART_SCALE, y: y * ART_SCALE, w: w * ART_SCALE, h: h * ART_SCALE };
+}
+
+function drawSprite(ctx, name, x, y, w, h) {
+  const image = ART_ATLAS.image;
+  const s = ART_SPRITES[name];
+  if (!image || !s || !image.complete || image.naturalWidth === 0) return false;
+  ctx.drawImage(image, s.x, s.y, s.w, s.h, Math.floor(x), Math.floor(y), Math.ceil(w), Math.ceil(h));
+  return true;
 }
 
 function hash(x, y) {
