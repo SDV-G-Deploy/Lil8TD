@@ -1,114 +1,165 @@
-# Lil8TD Pixel Style Guide V0
+# Lil8TD Pixel Style Guide V0 — Visual Foundation
 
-Status: evolved practical visual pass for the public browser demo. This is still a lightweight canvas-first direction, but the target has moved from “readable prototype pixels” toward a small nostalgic RTS/fantasy board with warmth, craft, and charm.
+Status: taste-polish foundation for the public canvas demo. This document is no longer just a list of rendered details; it is the visual grammar for making Lil8TD feel charming, cohesive, nostalgic, and readable without introducing a heavy art pipeline.
 
-## Visual direction
+## Artistic north star
 
-Lil8TD should feel like a compact old-strategy battlefield: a cozy, readable fantasy diorama, with chunky silhouettes and hand-built-looking materials. The reference mood is classic RTS nostalgia — warm earth, carved UI panels, fortified little buildings, tiny characterful units — without copying any specific game interface or asset.
+Lil8TD should feel like a tiny old-fantasy strategy board: mossy build fields, a hand-worn road, squat fortified toy towers, small readable monsters, and carved wood/bronze UI chrome. The beauty target is **lovable miniature battlefield**, not realistic terrain and not noisy pixel wallpaper.
 
-Target feeling: a small noble battlefield carved out of parchment, earth, stone, moss, and bronze. Gameplay readability stays first, but the board should no longer look like raw debug geometry.
+The right feeling:
+
+- warm, crafted, and slightly storybook;
+- nostalgic RTS/board-game energy;
+- chunky primitive pixel shapes that look intentional;
+- readable gameplay first, decorative charm second;
+- one cohesive material world: moss, earth, stone, wood, bronze, parchment, role-color magic.
+
+## Beauty principles
+
+1. **Foundation before embellishment.** Every detail must reinforce palette, material, silhouette, or hierarchy. Avoid “more pixels” as a substitute for taste.
+2. **Calm fields, lively focal points.** Terrain may have texture, but moving enemies, towers, HP bars, hover, and attacks must remain the sharpest reads.
+3. **Chunky shape language.** Rectangles, diamonds, plaques, squat bases, crenellated/fortified proportions, and simple banners are the project’s native forms.
+4. **Warm/cool discipline.** Most of the world is warm earth/wood/bronze and deep moss. Cool cyan is reserved for frost/control and should feel special.
+5. **Handmade rhythm, not randomness.** Decoration should be deterministic, repeated, and grouped into motifs: road stones, dust strokes, moss pads, build pins, panel corner jewels.
+6. **Toy-fortress proportions.** Towers should feel like tiny keep pieces placed on a board, with shared bases and distinct role tops.
 
 ## Palette families
 
-Use a restrained warm/cool palette with stable gameplay accents.
+### Board / grass family
 
-- **Board base:** deep forest greens, moss, warm olive highlights, muted tan flowers/rocks.
-- **Road/path:** umber rims, packed ochre dirt, dusty gold highlights, small worn stones.
-- **Frame/UI:** dark carved wood, bronze trim, parchment/gold text accents.
-- **Towers:** shared stone/wood base plus role accent:
-  - Arrow: muted yellow/cream = reliable marksman/bolt identity.
-  - Burst: orange/bronze = explosive cannon identity.
-  - Frost: cyan/icy white = control/crystal identity.
-- **Enemies:** readable fantasy unit accents:
-  - Grunt: tan/ochre body, small infantry anchor.
-  - Runner: red/coral forward-leaning scout threat.
-  - Brute: purple heavy horned pressure unit.
-- Add value contrast and silhouette first; add new hues only when a role cannot be read otherwise.
+- Deep greens: forest base, calm negative space.
+- Moss/olive: restrained tile variation and soft pads.
+- Muted flower/gold: tiny warmth accents only.
+- Slate/stone: small grounded terrain marks.
 
-## Terrain material rules
+Rule: grass supports gameplay. It should look alive but never compete with towers or enemies.
 
-- Grass/build tiles should be alive but not noisy: alternating deep greens, a few deterministic flecks, small moss/flower/stone marks, and subtle top/bottom lighting.
-- Every tile may have texture, but no tile should visually fight tower/enemy silhouettes.
-- Grid lines are diegetic board seams: visible and warm, not neon debug lines.
-- Buildable spots can have faint cross-pins so placement reads without turning into a checkerboard.
+### Path / road family
 
-## Path/readability rules
+- Dark umber rim.
+- Packed ochre dirt center.
+- Dusty gold highlights.
+- Muted border stones.
 
-- The route must be readable at a glance as the main horizontal lane.
-- Path tiles are “crafted/worn”: dark earthen rim, packed center, dust strokes, small border stones, and tiny center markers.
-- Start/end markers are small banners/gate posts: decorative, symbolic, and lower priority than enemy bodies.
-- Path decoration must not obscure HP bars, enemy bodies, or firing feedback.
+Rule: the path is the main compositional spine. It must read instantly as a crafted lane, not a debug stripe.
 
-## Silhouette language
+### UI / frame family
+
+- Dark carved wood.
+- Bronze/gold trim.
+- Parchment text accents.
+- Small diamond corner ornaments.
+
+Rule: UI chrome should share the same “crafted board” language as the canvas frame, not feel like a separate modern web panel.
+
+### Role accent family
+
+- Arrow: gold/cream, precise and reliable.
+- Burst: orange/bronze, heavy and explosive.
+- Frost: cyan/white, magical and controlling.
+- Enemies: tan grunt, coral runner, purple brute.
+
+Rule: role colors are gameplay signals. Do not introduce new saturated colors unless they carry new gameplay meaning.
+
+## Material families
+
+- **Moss field:** deep green fill, subtle top light, warm lower shadow, sparse blades/pads/flowers/stones.
+- **Built road:** rim, compacted center, center dust streak, side stones, small route diamonds.
+- **Fortified tower:** shadow plinth, stone body, dark aperture, roof band, trim strip, role-specific top.
+- **Carved UI:** wood slab, bronze frame, parchment/gold type, corner diamonds, inset lines.
+- **Combat magic:** short-lived high-value strokes and diamonds; never large persistent glow.
+
+## Shape language / silhouette doctrine
+
+### Global motifs
+
+- Rectangular slabs = structure/material.
+- Diamonds = ornament/magic/focal markers.
+- Horizontal bands = crafted construction and UI plaques.
+- Squat bases = defensive board-piece identity.
+- Small banners = start/end narrative markers.
 
 ### Towers
 
-All towers share a squat fortified base: shadow, stone body, dark aperture, roof/trim, and a small level badge. The base makes them feel like tiny keep pieces rather than colored markers.
+All towers share the same base so they belong to one material family. Identity comes from the top silhouette:
 
-Role tops create instant identity:
+- **Arrow:** narrow mast + crossbar + bolt tip. Reads vertical/precise.
+- **Burst:** wide cannon + glowing diamond core. Reads heavy/volatile.
+- **Frost:** slim antenna + crystal diamond. Reads tall/magical/control.
 
-- **Arrow:** vertical mast and crossbow/bolt profile; narrow, precise silhouette.
-- **Burst:** horizontal cannon barrel plus glowing diamond core; wide, heavy silhouette.
-- **Frost:** vertical crystal antenna and icy diamond; tall, magical/control silhouette.
+If a new tower is added, design it first as a black silhouette at gameplay size. If it cannot be recognized by mass/proportion, palette will not save it.
 
 ### Enemies
 
-Enemies stay tiny but characterful:
+- **Grunt:** centered infantry, helmet/cap, balanced stance.
+- **Runner:** low forward lean, motion streaks, single forward eye.
+- **Brute:** wide mass, horns, heavy arms.
 
-- **Grunt:** centered infantry with cap/helmet, two eyes, balanced stance.
-- **Runner:** low forward body, single forward eye, leg streaks/bob for speed.
-- **Brute:** wide tall body, horns, heavy arms, broad mass.
+Enemy bodies should remain simple enough to read under HP bars and attack effects.
 
-Health bars remain above silhouettes and should never hide the identifying body shape.
+## Ornament discipline
 
-## Ornament and decoration rules
+Good ornament:
 
-- Ornament should support the board fantasy: stones, banners, bronze corners, carved panel edges, dust marks.
-- Prefer a few deterministic, repeated motifs over random visual noise.
-- Avoid high-frequency speckles everywhere; leave calm patches so moving enemies and projectiles pop.
-- Keep all art primitive/canvas-friendly: rects, chunky diamonds, simple strokes, no heavy sprite pipeline required yet.
+- repeats established motifs;
+- is low contrast on terrain;
+- appears in purposeful zones: road edge, UI corners, tower badges, start/end markers;
+- helps materials feel handcrafted.
 
-## UI frame styling principles
+Bad ornament:
 
-- HUD and side panel should feel like old strategy parchment/wood/bronze chrome.
-- Buttons may look like carved plaques; active state should be warm gold/brown, not modern blue.
-- Typography remains monospace for implementation simplicity, but color, borders, shadows, and hierarchy should carry the fantasy mood.
-- UI must stay lightweight and responsive for GitHub Pages.
+- random speckles everywhere;
+- many unrelated shapes or colors;
+- decoration with equal contrast to enemies/projectiles;
+- modern neon overlays that break the old-board fantasy.
 
-## Effect language
+## Readability guardrails
 
-- Effects are short, high-contrast combat confirmations:
-  - Arrow: thin bright bolt plus small impact diamond.
-  - Burst: thicker orange shot, circular blast ring, gold impact core.
-  - Frost: pale beam, secondary cold line, icy diamond impact.
-- Selected range uses restrained dashed/inner rings so it reads as tactical overlay rather than a modern neon debug circle.
-- Slow overlay uses cyan frame and small ice diamond; keep it legible but not opaque.
+1. Path vs build terrain must be readable in peripheral vision.
+2. Towers must be recognizable without reading button labels.
+3. Enemies must be recognizable by mass and posture, not just color.
+4. HP bars, hover feedback, and combat events always sit above terrain detail in priority.
+5. Selection/range visuals should feel tactical and restrained, not like debug neon.
+6. Rendering flourishes must not affect deterministic sim logic or tests.
+7. The project remains lightweight static browser deploy; no heavy asset/build pipeline by default.
 
-## Gameplay readability constraints
+## What makes Lil8TD charming specifically
 
-1. Path/build separation must remain stronger than terrain texture.
-2. Tower type must be recognizable by silhouette even without UI text.
-3. Enemy type must be recognizable by silhouette, mass, and accent color.
-4. HP bars and combat events draw over terrain details.
-5. Hover/build feedback remains explicit and higher priority than decoration.
-6. Deterministic/core gameplay code should not depend on rendering flourishes.
+Lil8TD’s charm is the contrast between tiny deterministic systems and a warm toy battlefield presentation. It should feel like placing little fort pieces on moss around an old road while miniature goblin-like threats march through. The charm comes from:
 
-## Implemented in the current nostalgic RTS visual pass
+- tiny fortified structures with shared craft language;
+- enemies that have posture/personality at very small size;
+- road markers and banners that imply a world without needing lore text;
+- cozy board materials instead of abstract rectangles;
+- restrained, confident use of pixels.
 
-- Rebuilt the canvas palette around warm earth, moss, bronze, parchment, and restrained role accents.
-- Upgraded grass/build terrain with deterministic material flecks, moss/flower/stone marks, subtle tile lighting, and faint build pins.
-- Reworked the path into a worn crafted road with earthen rims, packed center, dusty highlights, border stones, route ornaments, and small start/end banners.
-- Replaced simple tower markers with fortified miniature structures: shared stone bases, roofs, apertures, role-specific tops, shadows, and framed level badges.
-- Added more character to enemies: helmeted grunts, forward-leaning runners with motion bob/streak, horned broad brutes with heavy arms.
-- Improved combat feedback with distinct arrow/burst/frost effect language and stronger kill/impact sparkle.
-- Replaced the blue prototype canvas/HUD styling with wood/bronze/parchment UI framing and carved plaque buttons.
-- Improved selection range styling from plain circle to a restrained tactical dashed ring.
+## Anti-patterns / what not to do
 
-## How to extend without degrading into noise
+- Do not turn every tile into a unique noisy texture.
+- Do not add new accent colors for decoration-only reasons.
+- Do not make the UI look like generic sci-fi/web dashboard chrome.
+- Do not rely on text labels to distinguish tower/enemy roles.
+- Do not let effects become large opaque glows that hide units.
+- Do not add decorative systems that require a heavy pipeline unless the visual payoff is clearly worth it.
+- Do not chase “asset richness” before the composition, palette, and silhouettes are stable.
 
-1. Add new material motifs one family at a time; do not sprinkle every tile with every motif.
-2. When adding a new tower/enemy, design the silhouette in one dark color first, then add role color.
-3. Keep board decoration low contrast except at strategic markers, impacts, and interactable states.
-4. New UI chrome should reuse wood/bronze/parchment tokens before introducing another theme.
-5. If sprites are introduced later, match the current chunky proportions and palette, then replace procedural primitives gradually.
-6. Static GitHub Pages remains a hard constraint: no heavy asset build pipeline unless it clearly improves the shipped demo.
+## What this taste-polish pass implemented
+
+- Re-centered the palette around deeper moss, warmer path earth, more restrained seams, and clearer role accents.
+- Added a quiet board underlay so the map feels composed before tile detail appears.
+- Reworked grass tiles into calmer material fields: fewer high-frequency marks, deterministic moss/flower/stone accents, stronger top-light/bottom-shadow rhythm.
+- Refined the path into a more crafted road: darker edge bands, compacted center variation, dust rhythm, highlighted side stones, and route diamonds.
+- Made build pins more diegetic and less debug-like, with tiny grounded shadows and occasional low-contrast tokens.
+- Strengthened tower material grammar: shared plinth/body/roof/aperture language, clearer roof trim, stronger shadows, and more role-specific top silhouettes.
+- Added small enemy silhouette highlights/details while preserving simple readable masses.
+- Tightened web UI chrome toward carved wood/bronze/parchment and aligned it with the canvas frame language.
+
+## How to extend without losing taste
+
+1. Start with a one-sentence role fantasy, then a black silhouette, then material, then accent color.
+2. Reuse existing forms first: slab, diamond, banner, plinth, trim band, aperture.
+3. Add only one new motif per pass and decide where it is allowed to appear.
+4. Keep terrain lower contrast than towers/enemies/effects.
+5. If the screen feels busy, remove or lower terrain detail before simplifying gameplay signals.
+6. Before adding assets, ask whether procedural rectangles/diamonds can express the idea cleanly.
+7. Test at actual browser size; taste is judged at play scale, not zoomed-in code scale.

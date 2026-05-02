@@ -1,51 +1,56 @@
 :root{
   color-scheme:dark;
   font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  background:#090d13;
+  background:#070b10;
   color:#efe7cb;
   --ink:#0a0f18;
   --wood:#2b1d15;
+  --wood-dark:#160f0c;
   --wood-hi:#6f4d28;
   --bronze:#b9843f;
   --gold:#e0c17a;
   --parchment:#d9c08a;
-  --blue:#263653;
+  --lichen:#63713f;
+  --blue:#25344e;
 }
 *{box-sizing:border-box}
 body{
   margin:0;
   min-height:100vh;
   background:
-    radial-gradient(circle at 32% 0%,rgba(86,61,34,.40) 0,rgba(38,48,45,.22) 24%,transparent 48%),
-    radial-gradient(circle at 90% 12%,rgba(48,73,65,.28) 0,transparent 34%),
-    linear-gradient(180deg,#141617 0,#0b1018 54%,#060910 100%);
+    radial-gradient(circle at 26% 0%,rgba(104,76,39,.38) 0,rgba(55,60,41,.22) 25%,transparent 50%),
+    radial-gradient(circle at 92% 16%,rgba(55,82,66,.25) 0,transparent 36%),
+    linear-gradient(180deg,#151615 0,#0b1017 54%,#05080e 100%);
 }
 #app{max-width:1240px;margin:0 auto;padding:16px}.topbar{
+  position:relative;
   display:flex;justify-content:space-between;gap:16px;align-items:center;margin-bottom:12px;
-  padding:10px 12px;
-  background:linear-gradient(180deg,#2a2119,#17120f);
+  padding:11px 14px;
+  background:linear-gradient(180deg,#33261a 0,#1a120e 100%);
   border:2px solid var(--bronze);
-  box-shadow:inset 0 0 0 2px #0c0908,0 10px 24px rgba(0,0,0,.28);
+  box-shadow:inset 0 0 0 2px #0c0908,inset 0 0 0 5px rgba(232,196,117,.08),0 10px 24px rgba(0,0,0,.30);
 }
-.topbar strong{letter-spacing:.10em;text-transform:uppercase;color:#ffe59a;text-shadow:2px 2px 0 #27170b}.muted{color:#c5b68c}.layout{display:grid;grid-template-columns:minmax(640px,960px) 272px;gap:16px}canvas{
+.topbar:before{content:"";position:absolute;left:8px;right:8px;top:5px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.38}.topbar strong{letter-spacing:.11em;text-transform:uppercase;color:#ffe59a;text-shadow:2px 2px 0 #27170b}.muted{color:#c5b68c}.layout{display:grid;grid-template-columns:minmax(640px,960px) 282px;gap:16px}canvas{
   display:block;width:100%;height:auto;
-  border:8px solid #2b1d15;
+  border:8px solid var(--wood);
   background:#111;
   image-rendering:pixelated;
-  box-shadow:0 0 0 3px #9a6c35,0 0 0 5px #150d09,0 22px 46px rgba(0,0,0,.42),inset 0 0 0 2px #d5b16a;
+  box-shadow:0 0 0 3px #9a6c35,0 0 0 5px #150d09,0 0 0 8px rgba(224,193,122,.08),0 24px 48px rgba(0,0,0,.44),inset 0 0 0 2px #d5b16a;
 }.panel{
   position:relative;
-  background:linear-gradient(180deg,#34261b 0,#1b1512 100%);
+  background:
+    linear-gradient(180deg,rgba(244,218,151,.05),transparent 36%),
+    linear-gradient(180deg,#34261b 0,#1b1512 100%);
   border:3px solid #9a6c35;
-  padding:14px;
-  box-shadow:inset 0 0 0 2px #0d0908, inset 0 0 0 5px rgba(222,187,111,.12),0 18px 36px rgba(0,0,0,.32);
-}.panel:before,.panel:after{content:"";position:absolute;width:16px;height:16px;border:2px solid var(--gold);background:#2b1d15;transform:rotate(45deg)}.panel:before{right:8px;top:8px}.panel:after{left:8px;bottom:8px}button{
+  padding:15px;
+  box-shadow:inset 0 0 0 2px #0d0908, inset 0 0 0 5px rgba(222,187,111,.12),0 18px 36px rgba(0,0,0,.33);
+}.panel:before,.panel:after{content:"";position:absolute;width:16px;height:16px;border:2px solid var(--gold);background:#2b1d15;transform:rotate(45deg);box-shadow:0 0 0 2px #0d0908}.panel:before{right:8px;top:8px}.panel:after{left:8px;bottom:8px}button{
   width:100%;margin:5px 0;padding:10px 11px;
-  background:linear-gradient(180deg,#3f4a58,#26303d);
+  background:linear-gradient(180deg,#3d4651 0,#26303a 60%,#1b222b 100%);
   color:#f0e5c2;
   border:2px solid #8b744f;
   cursor:pointer;font:inherit;text-align:left;
-  box-shadow:inset 0 2px 0 rgba(255,244,190,.12),inset 0 -4px 0 rgba(0,0,0,.28);
+  box-shadow:inset 0 2px 0 rgba(255,244,190,.12),inset 0 -4px 0 rgba(0,0,0,.30),0 2px 0 #120c09;
   text-shadow:1px 1px 0 #111;
 }button:hover{filter:brightness(1.12);border-color:#d3b56f}button.active{background:linear-gradient(180deg,#856338,#4a3521);border-color:#ffe09a;color:#fff4c6}button:disabled{opacity:.45;cursor:not-allowed}.help{font-size:12px;line-height:1.45;color:#c7b88e}h2{
   font-size:15px;margin:13px 0 7px;color:#ffe09a;letter-spacing:.08em;text-transform:uppercase;

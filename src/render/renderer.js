@@ -1,20 +1,23 @@
 import { canPlaceTower, tileKind } from '../sim/sim.js';
 
 const PALETTE = {
-  void: '#06101a',
-  grassDeep: '#142a19',
-  grassDark: '#1b3b22',
-  grass: '#25532d',
-  grassWarm: '#3d6a36',
-  moss: '#6f8f42',
-  flower: '#d9b56d',
-  stone: '#7d785f',
-  pathRim: '#4b3320',
-  pathDark: '#6a4728',
-  path: '#9b6d38',
-  pathLight: '#c99553',
-  pathDust: '#e1bc78',
-  grid: 'rgba(242, 222, 162, .13)',
+  void: '#050b12',
+  grassDeep: '#102417',
+  grassDark: '#18361f',
+  grass: '#244d2a',
+  grassWarm: '#3f6632',
+  grassGold: '#657542',
+  moss: '#718743',
+  flower: '#d6ac67',
+  stone: '#8a7d60',
+  slate: '#566052',
+  pathRim: '#3f2a1b',
+  pathDark: '#654322',
+  path: '#966634',
+  pathLight: '#c58c49',
+  pathDust: '#dfb46c',
+  seam: 'rgba(240, 219, 156, .11)',
+  grid: 'rgba(242, 222, 162, .10)',
   valid: 'rgba(116, 224, 105, .28)',
   invalid: 'rgba(218, 73, 65, .30)',
   ink: '#09101a',
@@ -23,7 +26,9 @@ const PALETTE = {
   parchment: '#d8bf83',
   bronze: '#b47b38',
   iron: '#39455a',
-  shadow: 'rgba(0, 0, 0, .33)',
+  shadow: 'rgba(0, 0, 0, .36)',
+  warmShadow: 'rgba(31, 18, 10, .30)',
+  glint: 'rgba(252, 230, 169, .30)',
   arrow: '#e3c85d',
   burst: '#ef8d42',
   frost: '#8edff0',
@@ -84,6 +89,7 @@ function draw(ctx, canvas, content, state, ui, m) {
   ctx.imageSmoothingEnabled = false;
   ctx.fillStyle = PALETTE.void;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
+  drawBoardUnderlay(ctx, canvas, m);
 
   drawTiles(ctx, content, m);
   drawPathOrnaments(ctx, content, m);
@@ -95,6 +101,18 @@ function draw(ctx, canvas, content, state, ui, m) {
   drawMapFrame(ctx, canvas, m);
 
   if (state.result) drawResult(ctx, canvas, state.result.outcome);
+}
+
+function drawBoardUnderlay(ctx, canvas, m) {
+  ctx.fillStyle = '#07100e';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  // Broad quiet fields make the map feel composed before individual tiles add material.
+  ctx.fillStyle = 'rgba(72, 91, 48, .16)';
+  pixelDiamond(ctx, canvas.width * .18, canvas.height * .22, m.tile * 2.2, 'rgba(72, 91, 48, .16)');
+  pixelDiamond(ctx, canvas.width * .82, canvas.height * .78, m.tile * 2.5, 'rgba(88, 72, 41, .12)');
+  ctx.fillStyle = 'rgba(0,0,0,.18)';
+  ctx.fillRect(0, 0, canvas.width, 22);
+  ctx.fillRect(0, canvas.height - 24, canvas.width, 24);
 }
 
 function drawTiles(ctx, content, m) {
@@ -110,37 +128,46 @@ function drawTiles(ctx, content, m) {
 
 function drawGrassTile(ctx, x, y, w, h, gx, gy, m) {
   const n = hash(gx, gy);
-  ctx.fillStyle = (gx + gy) % 2 === 0 ? PALETTE.grassDark : PALETTE.grassDeep;
+  const family = (gx * 3 + gy * 5 + n) % 9;
+  ctx.fillStyle = family < 2 ? PALETTE.grassDeep : (gx + gy) % 2 === 0 ? PALETTE.grassDark : '#17321d';
   ctx.fillRect(x, y, w, h);
 
-  ctx.fillStyle = n % 3 === 0 ? PALETTE.grass : '#214a29';
-  ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+  ctx.fillStyle = n % 5 === 0 ? '#2b5530' : n % 4 === 0 ? '#1f4427' : PALETTE.grass;
+  ctx.fillRect(x + 3, y + 3, w - 6, h - 6);
 
-  ctx.fillStyle = 'rgba(11, 30, 17, .34)';
-  ctx.fillRect(x + 4, y + h - 12, w - 8, 8);
-  ctx.fillStyle = 'rgba(215, 188, 115, .08)';
-  ctx.fillRect(x + 5, y + 6, w - 10, 4);
+  ctx.fillStyle = PALETTE.warmShadow;
+  ctx.fillRect(x + 3, y + h - 11, w - 6, 8);
+  ctx.fillStyle = 'rgba(239, 212, 141, .075)';
+  ctx.fillRect(x + 5, y + 6, w - 10, 5);
 
-  const step = Math.max(4, Math.floor(m.tile / 18));
-  for (let i = 0; i < 8; i++) {
+  const step = Math.max(3, Math.floor(m.tile / 22));
+  const flecks = 3 + (n % 4);
+  for (let i = 0; i < flecks; i++) {
     const px = x + 10 + ((n + i * 29 + gx * 17) % Math.max(12, Math.floor(w - 22)));
     const py = y + 12 + ((n * 3 + i * 19 + gy * 23) % Math.max(12, Math.floor(h - 26)));
-    const kind = (n + i) % 7;
-    ctx.fillStyle = kind === 0 ? PALETTE.flower : kind === 1 ? PALETTE.moss : PALETTE.grassWarm;
-    if (kind === 2) {
+    const kind = (n + i * 2) % 10;
+    if (kind === 0) {
+      ctx.fillStyle = PALETTE.flower;
+      ctx.fillRect(Math.floor(px), Math.floor(py), step * 2, step);
+    } else if (kind < 4) {
+      ctx.fillStyle = kind === 1 ? PALETTE.moss : PALETTE.grassGold;
       ctx.fillRect(Math.floor(px), Math.floor(py), step * 3, step);
-      ctx.fillRect(Math.floor(px + step), Math.floor(py - step), step, step * 3);
+      if (kind === 1) ctx.fillRect(Math.floor(px + step), Math.floor(py - step), step, step * 2);
     } else {
+      ctx.fillStyle = kind === 4 ? '#315c2e' : '#4e7037';
       ctx.fillRect(Math.floor(px), Math.floor(py), step, step);
-      if (kind === 0) ctx.fillRect(Math.floor(px + step), Math.floor(py), step, step);
     }
   }
 
-  if ((n & 5) === 5) {
-    ctx.fillStyle = 'rgba(179, 169, 126, .33)';
-    ctx.fillRect(x + w * .64, y + h * .62, m.tile * .10, m.tile * .045);
-    ctx.fillStyle = 'rgba(55, 48, 38, .28)';
-    ctx.fillRect(x + w * .64, y + h * .66, m.tile * .10, m.tile * .025);
+  if ((n & 7) === 5) {
+    ctx.fillStyle = 'rgba(174, 162, 118, .34)';
+    ctx.fillRect(x + w * .62, y + h * .61, m.tile * .13, m.tile * .045);
+    ctx.fillStyle = 'rgba(44, 37, 30, .30)';
+    ctx.fillRect(x + w * .62, y + h * .66, m.tile * .13, m.tile * .025);
+  }
+  if ((n % 13) === 3) {
+    ctx.fillStyle = 'rgba(95, 112, 63, .26)';
+    pixelDiamond(ctx, x + w * .26, y + h * .70, m.tile * .13, 'rgba(95, 112, 63, .26)');
   }
 }
 
@@ -149,14 +176,23 @@ function drawPathTile(ctx, x, y, w, h, gx, gy, m) {
   ctx.fillStyle = PALETTE.pathRim;
   ctx.fillRect(x, y, w, h);
 
+  ctx.fillStyle = '#2d1d14';
+  ctx.fillRect(x + 2, y + 5, w - 4, 12);
+  ctx.fillRect(x + 2, y + h - 17, w - 4, 12);
   ctx.fillStyle = PALETTE.pathDark;
-  ctx.fillRect(x + 2, y + 10, w - 4, h - 20);
-  ctx.fillStyle = PALETTE.path;
-  ctx.fillRect(x + 8, y + 16, w - 16, h - 32);
+  ctx.fillRect(x + 2, y + 12, w - 4, h - 24);
+  ctx.fillStyle = gx % 2 === 0 ? PALETTE.path : '#8d5d31';
+  ctx.fillRect(x + 8, y + 17, w - 16, h - 34);
+
+  // A soft diagonal value rhythm keeps the road handcrafted without losing the lane read.
+  ctx.fillStyle = 'rgba(80, 47, 24, .22)';
+  ctx.fillRect(x + 12 + (gx % 3) * 6, y + 20, w * .18, h - 40);
+  ctx.fillStyle = 'rgba(238, 196, 118, .12)';
+  ctx.fillRect(x + w * .48, y + 18, w * .16, h - 36);
 
   // crafted worn center, like a compact old RTS road with packed dust and plank/stone breaks
   ctx.fillStyle = 'rgba(227, 183, 104, .36)';
-  ctx.fillRect(x + 14, y + h * .42, w - 28, 5);
+  ctx.fillRect(x + 12, y + h * .42, w - 24, 5);
   ctx.fillStyle = 'rgba(55, 32, 19, .30)';
   ctx.fillRect(x + 10, y + h - 25, w - 20, 6);
   ctx.fillStyle = PALETTE.pathLight;
@@ -170,23 +206,25 @@ function drawPathTile(ctx, x, y, w, h, gx, gy, m) {
     ctx.fillRect(Math.floor(px), Math.floor(py), Math.max(3, m.tile * .045), Math.max(2, m.tile * .025));
   }
 
-  ctx.fillStyle = 'rgba(31, 21, 15, .28)';
-  ctx.fillRect(x + 2, y + 8, w - 4, 6);
-  ctx.fillRect(x + 2, y + h - 14, w - 4, 6);
+  ctx.fillStyle = 'rgba(31, 21, 15, .32)';
+  ctx.fillRect(x + 2, y + 9, w - 4, 6);
+  ctx.fillRect(x + 2, y + h - 15, w - 4, 6);
 
   // little bordering stones make the road feel built, not just colored.
   for (let sx = x + 10 + (gx % 2) * 10; sx < x + w - 10; sx += 28) {
     ctx.fillStyle = ((Math.floor(sx) + gx) % 3) ? '#78694d' : '#a08b61';
     ctx.fillRect(Math.floor(sx), Math.floor(y + 7), 12, 5);
     ctx.fillRect(Math.floor(sx + 9), Math.floor(y + h - 12), 13, 5);
+    ctx.fillStyle = 'rgba(255,238,178,.20)';
+    ctx.fillRect(Math.floor(sx) + 2, Math.floor(y + 7), 6, 1);
   }
 }
 
 function drawTileGrid(ctx, x, y, w, h, gx, gy) {
-  ctx.strokeStyle = tileKind(gx, gy) === 'path' ? 'rgba(255, 231, 173, .16)' : PALETTE.grid;
+  ctx.strokeStyle = tileKind(gx, gy) === 'path' ? 'rgba(255, 231, 173, .13)' : PALETTE.grid;
   ctx.lineWidth = 2;
   ctx.strokeRect(Math.floor(x) + 1, Math.floor(y) + 1, Math.floor(w) - 2, Math.floor(h) - 2);
-  ctx.strokeStyle = 'rgba(0, 0, 0, .20)';
+  ctx.strokeStyle = 'rgba(0, 0, 0, .16)';
   ctx.lineWidth = 1;
   ctx.strokeRect(Math.floor(x) + 4, Math.floor(y) + 4, Math.floor(w) - 8, Math.floor(h) - 8);
 }
@@ -195,11 +233,12 @@ function drawPathOrnaments(ctx, content, m) {
   const cy = 2.5 * m.cellH;
   for (let x = .55; x < m.gridW; x += 1.08) {
     const px = x * m.cellW;
-    ctx.fillStyle = 'rgba(83, 48, 27, .35)';
-    ctx.fillRect(px - 13, cy - 1, 29, 5);
-    pixelDiamond(ctx, px, cy - 1, 8, PALETTE.pathDust);
-    ctx.fillStyle = '#6a4425';
-    ctx.fillRect(px + 7, cy - 3, 8, 4);
+    ctx.fillStyle = 'rgba(67, 39, 22, .34)';
+    ctx.fillRect(px - 16, cy - 2, 33, 5);
+    pixelDiamond(ctx, px, cy - 1, 7, 'rgba(223, 180, 108, .78)');
+    pixelDiamond(ctx, px, cy - 1, 3, '#744723');
+    ctx.fillStyle = 'rgba(244, 220, 154, .18)';
+    ctx.fillRect(px + 7, cy - 4, 9, 3);
   }
 
   // entrance / keep markers: decorative but small enough not to compete with enemies.
@@ -223,12 +262,18 @@ function drawGateMarker(ctx, x, y, mode) {
 
 function drawBuildPins(ctx, content, state, m) {
   const occupied = new Set(state.towers.map(t => `${t.tileX},${t.tileY}`));
-  ctx.fillStyle = 'rgba(218, 193, 126, .18)';
   for (let y = 0; y < m.gridH; y++) for (let x = 0; x < m.gridW; x++) {
     if (tileKind(x, y) === 'path' || occupied.has(`${x},${y}`)) continue;
     const cx = (x + .5) * m.cellW, cy = (y + .5) * m.cellH;
-    ctx.fillRect(cx - 7, cy - 1, 14, 2);
-    ctx.fillRect(cx - 1, cy - 7, 2, 14);
+    ctx.fillStyle = 'rgba(18, 27, 15, .20)';
+    ctx.fillRect(cx - 9, cy + 7, 18, 3);
+    ctx.fillStyle = 'rgba(218, 193, 126, .15)';
+    ctx.fillRect(cx - 6, cy - 1, 12, 2);
+    ctx.fillRect(cx - 1, cy - 6, 2, 12);
+    if ((hash(x, y) % 5) === 0) {
+      ctx.fillStyle = 'rgba(213, 174, 102, .13)';
+      ctx.fillRect(cx + 8, cy - 9, 5, 5);
+    }
   }
 }
 
@@ -266,25 +311,35 @@ function drawRange(ctx, x, y, r, meta) {
 
 function drawTowerBase(ctx, x, y, s, meta) {
   ctx.fillStyle = PALETTE.shadow;
-  ctx.fillRect(x - s * .32, y + s * .29, s * .64, 8);
-  ctx.fillStyle = '#221b17';
-  ctx.fillRect(x - s * .28, y + s * .10, s * .56, s * .24);
+  ctx.fillRect(x - s * .36, y + s * .30, s * .72, 8);
+  ctx.fillStyle = '#1d1512';
+  ctx.fillRect(x - s * .32, y + s * .11, s * .64, s * .25);
+  ctx.fillStyle = '#423126';
+  ctx.fillRect(x - s * .26, y + s * .23, s * .52, s * .09);
   ctx.fillStyle = meta.stone;
-  ctx.fillRect(x - s * .24, y - s * .14, s * .48, s * .34);
-  ctx.fillStyle = '#8f846c';
-  ctx.fillRect(x - s * .20, y - s * .10, s * .12, s * .09);
-  ctx.fillRect(x + s * .08, y - s * .10, s * .12, s * .09);
-  ctx.fillStyle = '#2b2b32';
-  ctx.fillRect(x - s * .16, y + s * .05, s * .32, s * .10);
+  ctx.fillRect(x - s * .25, y - s * .15, s * .50, s * .37);
+  ctx.fillStyle = 'rgba(244,231,191,.26)';
+  ctx.fillRect(x - s * .20, y - s * .11, s * .11, s * .08);
+  ctx.fillRect(x + s * .08, y - s * .11, s * .11, s * .08);
+  ctx.fillStyle = 'rgba(22,20,22,.32)';
+  ctx.fillRect(x - s * .25, y + s * .15, s * .50, s * .07);
+  ctx.fillStyle = '#24242a';
+  ctx.fillRect(x - s * .15, y + s * .04, s * .30, s * .12);
+  ctx.fillStyle = 'rgba(0,0,0,.22)';
+  ctx.fillRect(x - s * .25, y - s * .15, s * .05, s * .37);
   ctx.fillStyle = meta.roof;
-  ctx.fillRect(x - s * .30, y - s * .24, s * .60, s * .14);
+  ctx.fillRect(x - s * .32, y - s * .25, s * .64, s * .15);
   ctx.fillStyle = meta.trim;
-  ctx.fillRect(x - s * .22, y - s * .29, s * .44, s * .06);
+  ctx.fillRect(x - s * .24, y - s * .31, s * .48, s * .06);
+  ctx.fillStyle = 'rgba(255,245,194,.18)';
+  ctx.fillRect(x - s * .24, y - s * .25, s * .48, s * .03);
 }
 
 function drawArrowTower(ctx, x, y, s, meta) {
   ctx.fillStyle = '#5b4325';
   ctx.fillRect(x - s * .06, y - s * .48, s * .12, s * .29);
+  ctx.fillStyle = '#2d2116';
+  ctx.fillRect(x - s * .09, y - s * .42, s * .18, s * .06);
   ctx.fillStyle = meta.color;
   ctx.fillRect(x - s * .23, y - s * .48, s * .46, s * .08);
   ctx.fillRect(x + s * .16, y - s * .55, s * .08, s * .20);
@@ -296,6 +351,8 @@ function drawArrowTower(ctx, x, y, s, meta) {
 }
 
 function drawBurstTower(ctx, x, y, s, meta) {
+  ctx.fillStyle = '#2d1712';
+  ctx.fillRect(x - s * .38, y - s * .39, s * .16, s * .12);
   ctx.fillStyle = '#542518';
   ctx.fillRect(x - s * .32, y - s * .44, s * .64, s * .14);
   ctx.fillStyle = '#261513';
@@ -310,6 +367,8 @@ function drawBurstTower(ctx, x, y, s, meta) {
 function drawFrostTower(ctx, x, y, s, meta) {
   ctx.fillStyle = '#214d64';
   ctx.fillRect(x - s * .08, y - s * .48, s * .16, s * .30);
+  ctx.fillStyle = '#173447';
+  ctx.fillRect(x - s * .13, y - s * .36, s * .26, s * .06);
   ctx.fillStyle = meta.color;
   pixelDiamond(ctx, x, y - s * .56, s * .15, meta.color);
   ctx.fillStyle = meta.trim;
@@ -351,11 +410,16 @@ function drawEnemies(ctx, content, state, m) {
 
 function drawGrunt(ctx, x, y, s, meta) {
   ctx.fillStyle = meta.shade;
-  ctx.fillRect(x - s * .38, y - s * .18, s * .76, s * .58);
+  ctx.fillRect(x - s * .40, y - s * .16, s * .80, s * .56);
   ctx.fillStyle = meta.color;
   ctx.fillRect(x - s * .30, y - s * .47, s * .60, s * .56);
+  ctx.fillStyle = 'rgba(255,236,172,.20)';
+  ctx.fillRect(x - s * .23, y - s * .42, s * .18, s * .43);
   ctx.fillStyle = '#ead18b';
   ctx.fillRect(x - s * .20, y - s * .55, s * .40, s * .10);
+  ctx.fillStyle = '#7d6135';
+  ctx.fillRect(x - s * .27, y - s * .49, s * .10, s * .06);
+  ctx.fillRect(x + s * .17, y - s * .49, s * .10, s * .06);
   ctx.fillStyle = meta.eye;
   ctx.fillRect(x - s * .15, y - s * .24, s * .09, s * .10);
   ctx.fillRect(x + s * .07, y - s * .24, s * .09, s * .10);
@@ -369,9 +433,13 @@ function drawRunner(ctx, x, y, s, meta, tick) {
   ctx.fillStyle = meta.shade;
   ctx.fillRect(x - s * .54, y + s * .17 + bob, s * .30, s * .13);
   ctx.fillRect(x + s * .13, y + s * .18 - bob, s * .46, s * .13);
+  ctx.fillStyle = 'rgba(84, 25, 29, .45)';
+  ctx.fillRect(x - s * .58, y - s * .01 + bob, s * .18, s * .08);
   ctx.fillStyle = meta.color;
   ctx.fillRect(x - s * .44, y - s * .23, s * .72, s * .40);
   ctx.fillRect(x - s * .04, y - s * .48, s * .40, s * .25);
+  ctx.fillStyle = 'rgba(255,205,139,.20)';
+  ctx.fillRect(x - s * .35, y - s * .20, s * .22, s * .08);
   ctx.fillStyle = '#f0a06d';
   ctx.fillRect(x + s * .21, y - s * .53, s * .20, s * .08);
   ctx.fillStyle = meta.eye;
@@ -385,9 +453,13 @@ function drawBrute(ctx, x, y, s, meta) {
   ctx.fillRect(x - s * .54, y - s * .12, s * 1.08, s * .62);
   ctx.fillStyle = meta.color;
   ctx.fillRect(x - s * .40, y - s * .58, s * .80, s * .70);
+  ctx.fillStyle = 'rgba(221, 198, 255, .18)';
+  ctx.fillRect(x - s * .30, y - s * .51, s * .22, s * .52);
   ctx.fillStyle = '#cdb6ff';
   ctx.fillRect(x - s * .50, y - s * .68, s * .18, s * .20);
   ctx.fillRect(x + s * .32, y - s * .68, s * .18, s * .20);
+  ctx.fillStyle = '#221535';
+  ctx.fillRect(x - s * .08, y - s * .67, s * .16, s * .10);
   ctx.fillStyle = '#6f59ac';
   ctx.fillRect(x - s * .27, y - s * .02, s * .54, s * .18);
   ctx.fillStyle = meta.eye;
