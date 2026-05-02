@@ -143,19 +143,23 @@ function drawTiles(ctx, content, m) {
 }
 
 function grassSpriteIndex(x, y) {
-  // Break up atlas repetition by clustering tiles into soft hand-painted families instead of pure modulo noise.
-  const region = Math.floor(x / 2) * 19 + Math.floor(y / 2) * 31;
-  const local = hash(x, y) % 7;
-  return Math.abs(region + local + x * 3 - y * 5) % 4;
+  // Sprite Set V2: cluster into grass families A/B/C instead of per-tile confetti.
+  const cluster = Math.floor(x / 3) * 17 + Math.floor(y / 2) * 29;
+  const roll = Math.abs(cluster + hash(Math.floor(x / 2), Math.floor(y / 2))) % 10;
+  if (roll < 5) return 0;      // A: base moss field
+  if (roll < 7) return 1;      // B: warmer dry moss/earth
+  if (roll < 9) return 2;      // C: cooler shaded moss
+  return 3;                    // quiet bridge variant
 }
 
 function drawGrassVariationOverlay(ctx, x, y, w, h, gx, gy, m) {
   const n = hash(gx + 41, gy + 73);
-  const family = (Math.floor(gx / 2) + Math.floor(gy / 2) * 3 + n) % 9;
+  const family = (Math.floor(gx / 3) + Math.floor(gy / 2) * 3 + n) % 11;
 
   // Large translucent patches cross tile boundaries, which hides the carpet grid without adding noise.
-  if (family === 0 || family === 4) {
-    pixelDiamond(ctx, x + w * ((n & 1) ? .25 : .76), y + h * ((n & 2) ? .30 : .72), m.tile * (family === 0 ? .34 : .25), family === 0 ? 'rgba(97, 117, 61, .20)' : 'rgba(21, 46, 26, .30)');
+  if (family === 0 || family === 4 || family === 9) {
+    const color = family === 0 ? 'rgba(101, 117, 62, .18)' : family === 4 ? 'rgba(20, 47, 34, .25)' : 'rgba(112, 88, 48, .12)';
+    pixelDiamond(ctx, x + w * ((n & 1) ? .22 : .78), y + h * ((n & 2) ? .28 : .74), m.tile * (family === 0 ? .38 : .29), color);
   }
   if (family === 2) {
     ctx.fillStyle = 'rgba(111, 126, 67, .18)';
@@ -169,8 +173,9 @@ function drawGrassVariationOverlay(ctx, x, y, w, h, gx, gy, m) {
     ctx.fillRect(Math.floor(x + w * .60), Math.floor(y + h * .56), Math.floor(w * .13), 2);
   }
   // Sparse landmark clumps: readable on phone, rare enough not to compete with path/build pins.
-  if ((n % 17) === 5) drawGrassClump(ctx, x + w * .70, y + h * .28, m.tile, '#7f914b');
-  if ((n % 23) === 9) drawGrassClump(ctx, x + w * .24, y + h * .68, m.tile * .85, '#4f7138');
+  if ((n % 19) === 5) drawGrassClump(ctx, x + w * .70, y + h * .28, m.tile, '#758747');
+  if ((n % 29) === 9) drawGrassClump(ctx, x + w * .24, y + h * .68, m.tile * .85, '#4f7138');
+  if ((n % 41) === 11) drawTinyMushroom(ctx, x + w * .38, y + h * .72, m.tile);
 }
 
 function drawGrassClump(ctx, x, y, s, color) {
@@ -184,12 +189,22 @@ function drawGrassClump(ctx, x, y, s, color) {
   ctx.fillRect(Math.floor(x + s * .03), Math.floor(y - s * .02), Math.max(2, Math.floor(s * .12)), 2);
 }
 
+function drawTinyMushroom(ctx, x, y, s) {
+  ctx.fillStyle = 'rgba(16, 10, 7, .22)';
+  ctx.fillRect(Math.floor(x - s * .06), Math.floor(y + s * .10), Math.floor(s * .22), 2);
+  ctx.fillStyle = 'rgba(215, 189, 131, .62)';
+  ctx.fillRect(Math.floor(x), Math.floor(y), Math.max(2, Math.floor(s * .045)), Math.floor(s * .12));
+  ctx.fillStyle = 'rgba(185, 90, 66, .50)';
+  ctx.fillRect(Math.floor(x - s * .06), Math.floor(y - s * .04), Math.floor(s * .18), Math.max(2, Math.floor(s * .055)));
+}
+
 function drawMacroTerrainAccents(ctx, content, m) {
   const accents = [
-    { x: 1.8, y: .78, r: .46, c: 'rgba(118, 133, 69, .14)' },
-    { x: 5.6, y: .92, r: .34, c: 'rgba(42, 78, 42, .18)' },
-    { x: 8.25, y: 4.15, r: .42, c: 'rgba(121, 93, 52, .12)' },
-    { x: 2.55, y: 4.42, r: .30, c: 'rgba(93, 114, 58, .16)' }
+    { x: 1.8, y: .78, r: .58, c: 'rgba(118, 133, 69, .13)' },
+    { x: 5.6, y: .92, r: .42, c: 'rgba(42, 78, 42, .17)' },
+    { x: 8.25, y: 4.15, r: .52, c: 'rgba(121, 93, 52, .11)' },
+    { x: 2.55, y: 4.42, r: .38, c: 'rgba(93, 114, 58, .15)' },
+    { x: 7.2, y: 1.42, r: .34, c: 'rgba(19, 50, 39, .14)' }
   ];
   for (const a of accents) {
     const tx = Math.floor(a.x), ty = Math.floor(a.y);
@@ -304,18 +319,18 @@ function drawTileGrid(ctx, x, y, w, h, gx, gy) {
 
 function drawPathOrnaments(ctx, content, m) {
   const cy = 2.5 * m.cellH;
-  for (let x = .55; x < m.gridW; x += 1.08) {
+  for (let x = .85; x < m.gridW; x += 1.7) {
     const px = x * m.cellW;
-    ctx.fillStyle = 'rgba(67, 39, 22, .34)';
-    ctx.fillRect(px - 16, cy - 2, 33, 5);
-    pixelDiamond(ctx, px, cy - 1, 7, 'rgba(223, 180, 108, .78)');
-    pixelDiamond(ctx, px, cy - 1, 3, '#744723');
-    ctx.fillStyle = 'rgba(244, 220, 154, .18)';
-    ctx.fillRect(px + 7, cy - 4, 9, 3);
+    ctx.fillStyle = 'rgba(67, 39, 22, .22)';
+    ctx.fillRect(px - 14, cy - 2, 29, 4);
+    pixelDiamond(ctx, px, cy - 1, 5, 'rgba(223, 180, 108, .45)');
+    pixelDiamond(ctx, px, cy - 1, 2, 'rgba(116, 71, 35, .75)');
+    ctx.fillStyle = 'rgba(244, 220, 154, .12)';
+    ctx.fillRect(px + 7, cy - 4, 8, 2);
   }
 
   // A few low-priority toy-board roadside flags add warmth without stealing lane priority.
-  for (let x = 1.25; x < m.gridW - .5; x += 2.55) {
+  for (let x = 1.45; x < m.gridW - .5; x += 3.3) {
     const px = x * m.cellW + ((Math.floor(x * 10) % 2) ? 5 : -3);
     const top = cy - m.cellH * .47;
     ctx.fillStyle = 'rgba(19, 12, 8, .34)';
@@ -780,7 +795,7 @@ function pixelDiamond(ctx, x, y, r, color) {
 function makeArtAtlas() {
   if (typeof Image === 'undefined') return { image: null };
   const image = new Image();
-  image.src = './assets/art-handdrawn/lil8td-handdrawn-v1.png';
+  image.src = './assets/art-handdrawn/lil8td-sprite-set-v2.png';
   return { image };
 }
 

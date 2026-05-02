@@ -20,21 +20,29 @@ HI = '#f3d891'
 # not as procedural tiles with tiny noise.
 
 def grass_tile(x, y, seed):
-    bases = ['#1b3f24', '#214c28', '#183920', '#254f2d']
-    mids = ['#2f6433', '#3f7138', '#365f2e', '#496d35']
+    # Sprite Set V2 terrain families:
+    # A = base moss, B = warmer dry moss, C = cooler shaded moss, plus a quiet bridge variant.
+    bases = ['#1b3c24', '#263f24', '#162f23', '#20472a']
+    mids = ['#345f34', '#54643a', '#2c543f', '#3f6938']
+    shadows = ['#122819', '#201f14', '#10241c', '#152b1b']
+    highlights = ['#718343', '#847342', '#52735f', '#6f8042']
     rect(x, y, x + 32, y + 32, '#0b1710')
     # irregular painted body
     poly([(x+2,y+3),(x+28,y+1),(x+31,y+10),(x+29,y+29),(x+7,y+31),(x+1,y+24)], bases[seed % 4])
     poly([(x+5,y+7),(x+20,y+4),(x+27,y+11),(x+24,y+22),(x+10,y+26),(x+4,y+18)], mids[seed % 4])
-    poly([(x+3,y+22),(x+12,y+19),(x+19,y+24),(x+27,y+22),(x+30,y+29),(x+6,y+30)], '#142a19')
+    poly([(x+3,y+22),(x+12,y+19),(x+19,y+24),(x+27,y+22),(x+30,y+29),(x+6,y+30)], shadows[seed % 4])
     # broad brush strokes, not confetti
-    line([(x+4,y+11),(x+10,y+8),(x+18,y+9),(x+25,y+6)], '#6d8345', 2)
-    line([(x+7,y+19),(x+13,y+16),(x+20,y+17)], '#7b8c4a', 2)
-    line([(x+17,y+25),(x+24,y+22),(x+29,y+23)], '#506b36', 2)
-    if seed in (0, 2):
+    line([(x+4,y+11),(x+10,y+8),(x+18,y+9),(x+25,y+6)], highlights[seed % 4], 2)
+    line([(x+7,y+19),(x+13,y+16),(x+20,y+17)], '#6f7d42' if seed != 2 else '#52705d', 2)
+    line([(x+17,y+25),(x+24,y+22),(x+29,y+23)], '#4b6836' if seed != 1 else '#6e6439', 2)
+    if seed == 0:
         # chunky flower/weed clump
-        rect(x+8,y+15,x+10,y+18,'#cfa55f'); rect(x+7,y+16,x+11,y+17,'#e5bd71')
+        rect(x+8,y+15,x+10,y+18,'#b58b4d'); rect(x+7,y+16,x+11,y+17,'#d7ad63')
         rect(x+5,y+18,x+13,y+20,'#365f2e')
+    if seed == 2:
+        # cool damp moss pocket: larger mark, lower contrast than decorative flowers.
+        poly([(x+7,y+15),(x+15,y+13),(x+21,y+17),(x+17,y+22),(x+8,y+22)], '#315f49')
+        line([(x+9,y+16),(x+18,y+18)], '#7fa38e', 1)
     if seed in (1, 3):
         # little stone/sprout landmark for phone-scale variety
         poly([(x+19,y+18),(x+25,y+17),(x+27,y+22),(x+22,y+24)], '#8b805f')
@@ -53,13 +61,15 @@ def path_tile(x, y, seed):
     # dark grass/earth shoulders make path distinct and less tiled
     poly([(x+0,y+0),(x+32,y+0),(x+30,y+8),(x+24,y+11),(x+7,y+9),(x+1,y+13)], '#3b291a')
     poly([(x+0,y+32),(x+32,y+32),(x+31,y+22),(x+25,y+20),(x+7,y+22),(x+1,y+18)], '#2e1e14')
-    # meandering painted road center
+    # meandering painted road center: broad compacted middle, dark shoulders, sparse handmade stones.
     wob = seed % 4
-    poly([(x+4,y+9+wob),(x+14,y+6),(x+27,y+8),(x+30,y+14),(x+27,y+24),(x+15,y+26),(x+4,y+23),(x+2,y+15)], '#704622')
-    poly([(x+7,y+11),(x+16,y+9),(x+25,y+11),(x+26,y+16),(x+23,y+21),(x+14,y+23),(x+7,y+20),(x+5,y+15)], '#b97535')
-    poly([(x+9,y+14),(x+17,y+12),(x+24,y+14),(x+22,y+17),(x+15,y+19),(x+8,y+18)], '#d4934a')
-    line([(x+6,y+22),(x+13,y+24),(x+23,y+22),(x+27,y+18)], '#4d2d18', 2)
-    line([(x+8,y+11),(x+17,y+9),(x+25,y+11)], '#e3b15e', 1)
+    poly([(x+3,y+9+wob),(x+13,y+6),(x+27,y+8),(x+31,y+14),(x+28,y+25),(x+15,y+27),(x+3,y+23),(x+1,y+15)], '#5c371d')
+    poly([(x+6,y+11),(x+16,y+8),(x+26,y+11),(x+28,y+16),(x+24,y+22),(x+14,y+24),(x+6,y+20),(x+4,y+15)], '#a36932')
+    poly([(x+8,y+14),(x+17,y+12),(x+25,y+14),(x+23,y+18),(x+15,y+20),(x+7,y+18)], '#c9833d')
+    line([(x+6,y+22),(x+13,y+24),(x+23,y+22),(x+27,y+18)], '#432616', 2)
+    line([(x+8,y+11),(x+17,y+9),(x+25,y+11)], '#e0ad5c', 1)
+    if seed in (1, 4):
+        line([(x+10,y+17),(x+18,y+16),(x+24,y+17)], '#f0c26b66', 1)
     # chunky border stones/planks
     for i, px in enumerate([4 + (seed % 3), 15, 25 - (seed % 2)]):
         c = '#8d7a55' if i != 1 else '#aa8b5b'
@@ -94,36 +104,37 @@ def tower_base(x, y, stone, roof, trim):
 
 def tower_arrow(x, y):
     tower_base(x, y, '#666166', '#7b5a2e', '#ffe680')
-    # jaunty oversized bow + pennant: reliable, toy-soldier, not sleek/mobile
-    line([(x+23,y+17),(x+25,y-2)], '#4b321d', 3)
-    line([(x+11,y+5),(x+22,y-1),(x+36,y+5)], '#f0cf54', 4)
-    line([(x+11,y+5),(x+21,y+11),(x+36,y+5)], '#7e5a24', 2)
-    line([(x+12,y+5),(x+35,y+5)], '#fff1a1', 1)
-    poly([(x+35,y-1),(x+47,y+4),(x+36,y+9)], '#f8eaa1')
+    # Hero V2: taller mast, huge bow crescent, unmistakable bolt nose, tiny crimson pennant.
+    line([(x+24,y+18),(x+24,y-7)], '#2f2015', 5)
+    line([(x+24,y+18),(x+24,y-7)], '#6a4721', 3)
+    line([(x+9,y+4),(x+22,y-5),(x+40,y+4)], '#f0cf54', 5)
+    line([(x+9,y+4),(x+21,y+14),(x+40,y+4)], '#6d4c21', 3)
+    line([(x+12,y+4),(x+37,y+4)], '#fff1a1', 1)
+    poly([(x+35,y-3),(x+47,y+4),(x+36,y+11)], '#f8eaa1')
     line([(x+35,y-1),(x+47,y+4),(x+36,y+9)], INK2, 1)
-    rect(x+7,y+0,x+12,y+12,'#b9472e'); line([(x+7,y+0),(x+12,y+0),(x+12,y+12)], INK, 1)
+    rect(x+6,y-1,x+12,y+12,'#b9152a'); line([(x+6,y-1),(x+12,y-1),(x+12,y+12)], INK, 1)
 
 
 def tower_burst(x, y):
     tower_base(x, y, '#6b584c', '#82371e', '#ffd179')
-    # squat kettle-cannon with a friendly ember belly
-    poly([(x+5,y+5),(x+36,y+0),(x+44,y+8),(x+12,y+14)], '#4b2517')
+    # Hero V2: broad kettle-cannon mass and hot belly; widest of the three towers.
+    poly([(x+2,y+6),(x+37,y-3),(x+47,y+8),(x+11,y+17)], '#351812')
     line([(x+5,y+5),(x+36,y+0),(x+44,y+8),(x+12,y+14),(x+5,y+5)], INK, 2)
-    rect(x+34,y+3,x+47,y+9,'#1b1110')
-    rect(x+38,y+4,x+45,y+7,'#ffbd6a44')
-    poly([(x+17,y+3),(x+31,y+1),(x+33,y+11),(x+16,y+13)], '#ef8d42')
-    poly([(x+24,y+8),(x+34,y+16),(x+24,y+25),(x+14,y+16)], '#ffd179')
-    poly([(x+24,y+12),(x+29,y+16),(x+24,y+21),(x+19,y+16)], '#ff6f2d')
+    rect(x+34,y+3,x+47,y+10,'#160d0b')
+    rect(x+38,y+5,x+46,y+8,'#ffbd6a55')
+    poly([(x+15,y+2),(x+31,y+0),(x+36,y+13),(x+18,y+17)], '#e23a36')
+    poly([(x+24,y+7),(x+37,y+18),(x+24,y+30),(x+12,y+18)], '#ffd179')
+    poly([(x+24,y+12),(x+30,y+18),(x+24,y+24),(x+18,y+18)], '#ff6f2d')
     line([(x+15,y+16),(x+33,y+16)], '#fff0a855', 1)
 
 
 def tower_frost(x, y):
     tower_base(x, y, '#526b77', '#245e78', '#dffcff')
-    # playful crystal crown, taller and more iconic but still icy/old-school
-    poly([(x+23,y-6),(x+35,y+8),(x+27,y+23),(x+14,y+11)], '#8ee6f6')
-    poly([(x+23,y-2),(x+29,y+8),(x+24,y+19),(x+18,y+10)], '#dffcff')
-    poly([(x+10,y+7),(x+17,y+0),(x+18,y+15)], '#65bfd4')
-    poly([(x+37,y+7),(x+31,y+1),(x+29,y+15)], '#5eb2ca')
+    # Hero V2: tall crown/spire with side shards, clearly vertical and cold.
+    poly([(x+24,y-10),(x+38,y+8),(x+28,y+29),(x+12,y+13)], '#8edff0')
+    poly([(x+24,y-4),(x+31,y+8),(x+25,y+24),(x+18,y+11)], '#dcfbff')
+    poly([(x+7,y+10),(x+18,y-4),(x+18,y+20)], '#4fb6a9')
+    poly([(x+42,y+10),(x+31,y-3),(x+30,y+21)], '#1c6b69')
     line([(x+23,y-6),(x+35,y+8),(x+27,y+23),(x+14,y+11),(x+23,y-6)], '#12384c', 2)
     line([(x+11,y+11),(x+37,y+8)], '#dffcff', 3)
     line([(x+23,y+0),(x+24,y+20)], '#ffffff88', 1)
@@ -179,16 +190,16 @@ def hero_tower_overlays():
     line([(x+24,y+14),(x+24,y-7)], '#2f2015', 4)
     line([(x+8,y+4),(x+22,y-4),(x+40,y+4)], '#ffe680', 5)
     line([(x+8,y+4),(x+22,y+13),(x+40,y+4)], '#6d4c21', 3)
-    poly([(x+34,y-3),(x+48,y+4),(x+35,y+11)], '#fff1a1')
-    line([(x+34,y-3),(x+48,y+4),(x+35,y+11)], INK2, 1)
+    poly([(x+34,y-3),(x+47,y+4),(x+35,y+11)], '#fff1a1')
+    line([(x+34,y-3),(x+47,y+4),(x+35,y+11)], INK2, 1)
     rect(x+18,y+3,x+21,y+19,'#f3d891')
 
     # Burst: squat armored bomb-cannon; wide top makes it distinct from arrow/frost.
     x, y = 48, 40
-    poly([(x+2,y+6),(x+37,y-2),(x+48,y+8),(x+11,y+17)], '#361912')
-    line([(x+2,y+6),(x+37,y-2),(x+48,y+8),(x+11,y+17),(x+2,y+6)], INK, 2)
-    rect(x+36,y+3,x+50,y+10,'#160d0b')
-    rect(x+39,y+5,x+47,y+8,'#ffd17966')
+    poly([(x+2,y+6),(x+37,y-2),(x+47,y+8),(x+11,y+17)], '#361912')
+    line([(x+2,y+6),(x+37,y-2),(x+47,y+8),(x+11,y+17),(x+2,y+6)], INK, 2)
+    rect(x+34,y+3,x+47,y+10,'#160d0b')
+    rect(x+38,y+5,x+46,y+8,'#ffd17966')
     poly([(x+15,y+2),(x+31,y+0),(x+36,y+13),(x+18,y+17)], '#ef8d42')
     poly([(x+25,y+8),(x+37,y+18),(x+25,y+30),(x+13,y+18)], '#ffd179')
     poly([(x+25,y+13),(x+31,y+18),(x+25,y+24),(x+19,y+18)], '#ff6f2d')
@@ -242,5 +253,5 @@ rect(72,145,88,159,'#1b110d'); poly([(80,145),(87,153),(80,160),(73,153)], '#8ed
 
 out = Path('assets/art-handdrawn')
 out.mkdir(parents=True, exist_ok=True)
-img.save(out / 'lil8td-handdrawn-v1.png')
-print(out / 'lil8td-handdrawn-v1.png')
+img.save(out / 'lil8td-sprite-set-v2.png')
+print(out / 'lil8td-sprite-set-v2.png')

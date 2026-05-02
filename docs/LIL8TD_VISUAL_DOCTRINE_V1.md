@@ -300,3 +300,18 @@ Still remaining after this pass:
 - Future tower upgrade stages should change body/profile, not only badges.
 - Terrain would benefit from true edge/transition families if the map gains more lanes or larger boards.
 - Enemy animation can still improve with tiny per-role sprite frame alternates, as long as sim determinism stays untouched.
+
+---
+
+## 16. Sprite Set V2 Phase A/B execution — May 2026
+
+This pass executes the first production slice from `LIL8TD_SPRITE_SET_V2_TASKLIST.md`:
+
+- **Phase A — terrain/path foundation:** added the active `lil8td-sprite-set-v2.png` atlas, grouped grass into A/B/C families, made renderer selection cluster by region, added low-contrast macro patches and rare clump/mushroom overlays, and reduced the road ornament cadence so the path reads as a handcrafted spine rather than decorative wallpaper.
+- **Phase B — tower hero pass:** redrew Arrow/Burst/Frost tower atlas sprites with stronger black-shape identities: Arrow is taller with a mast/bow/bolt/pennant read, Burst is the broad kettle-cannon mass with controlled crimson/ember accents, and Frost is the tall teal/cyan crystal-spire silhouette.
+
+Guardrails preserved:
+
+- Static Pages pipeline remains a plain PNG atlas + canvas renderer.
+- Placement/hit mapping is unchanged; all changes are render-only.
+- Terrain accents stay quieter than towers, enemies, HP bars, and path read.
