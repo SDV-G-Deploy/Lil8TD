@@ -276,3 +276,27 @@ What changed in this pass:
 - Slow feedback became a lighter dashed icy box with a small ground glint, keeping it readable but less blocky.
 - Terrain/path received only rare storybook accents and roadside flags, preserving the path/build-tile hierarchy.
 - UI chrome received tiny ornamental glyphs on the command plaque/buttons to add charm without increasing layout weight.
+
+---
+
+## 15. Targeted hero/readability pass — May 2026
+
+Why this became the next priority:
+
+- The live mobile screenshot improved, but the biggest visible weaknesses were now concentrated: towers still did not dominate the board, enemies still risked reading as tokens, and grass/build terrain still had a repeating-carpet rhythm.
+- This pass deliberately avoided broad polish and attacked those three pain points: **hero towers + character enemies + anti-repetition terrain**.
+
+What changed:
+
+- Tower sprites now draw from a taller atlas slice and occupy a larger render footprint inside their gameplay tile, giving them more vertical presence without changing placement or hit mapping.
+- Arrow/Burst/Frost silhouettes were pushed further apart: arrow is a tall watch spire with an oversized bow/bolt profile, burst is a wide armored cannon-bomb shape, and frost is a taller crystal-crowned spire.
+- Enemy render scale and accents were increased slightly. Grunt/runner/brute gained clearer feet, shield/scarf/heavy-arm reads, and small render-only motion marks so they feel more like tiny moving characters.
+- Grass tile selection now uses clustered variation instead of a simple per-tile modulo, and render-only low-contrast moss/earth overlays cross tile boundaries to hide mechanical repetition.
+- Rare chunky clumps and macro terrain patches add authored rhythm while preserving path/build readability and avoiding high-frequency noise.
+
+Still remaining after this pass:
+
+- Verify on the deployed mobile page after cache refresh; the intended first read is “towers are the heroes” before noticing terrain craft.
+- Future tower upgrade stages should change body/profile, not only badges.
+- Terrain would benefit from true edge/transition families if the map gains more lanes or larger boards.
+- Enemy animation can still improve with tiny per-role sprite frame alternates, as long as sim determinism stays untouched.

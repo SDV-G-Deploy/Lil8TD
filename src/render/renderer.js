@@ -46,9 +46,9 @@ const TOWER_META = {
 };
 
 const ENEMY_META = {
-  grunt: { color: PALETTE.grunt, shade: '#7a5a32', eye: '#342418', size: .39 },
-  runner: { color: PALETTE.runner, shade: '#7c2530', eye: '#ffe6d1', size: .31 },
-  brute: { color: PALETTE.brute, shade: '#46306f', eye: '#1d1132', size: .49 }
+  grunt: { color: PALETTE.grunt, shade: '#7a5a32', eye: '#342418', size: .44 },
+  runner: { color: PALETTE.runner, shade: '#7c2530', eye: '#ffe6d1', size: .37 },
+  brute: { color: PALETTE.brute, shade: '#46306f', eye: '#1d1132', size: .55 }
 };
 
 const ART_SCALE = 4;
@@ -56,7 +56,7 @@ const ART_ATLAS = makeArtAtlas();
 const ART_SPRITES = {
   grass0: sprite(0, 0, 32, 32), grass1: sprite(32, 0, 32, 32), grass2: sprite(64, 0, 32, 32), grass3: sprite(96, 0, 32, 32),
   path0: sprite(128, 0, 32, 32), path1: sprite(160, 0, 32, 32), path2: sprite(192, 0, 32, 32), path3: sprite(224, 0, 32, 32),
-  towerArrow: sprite(0, 40, 48, 56), towerBurst: sprite(48, 40, 48, 56), towerFrost: sprite(96, 40, 48, 56),
+  towerArrow: sprite(0, 32, 48, 72), towerBurst: sprite(48, 32, 48, 72), towerFrost: sprite(96, 32, 48, 72),
   enemyGrunt: sprite(0, 104, 32, 32), enemyRunner: sprite(32, 104, 32, 32), enemyBrute: sprite(64, 104, 32, 32),
   uiCorner: sprite(0, 144, 16, 16)
 };
@@ -102,6 +102,7 @@ function draw(ctx, canvas, content, state, ui, m, alpha = 0) {
   drawBoardUnderlay(ctx, canvas, m);
 
   drawTiles(ctx, content, m);
+  drawMacroTerrainAccents(ctx, content, m);
   drawPathOrnaments(ctx, content, m);
   drawBuildPins(ctx, content, state, m);
   drawEffects(ctx, content, state, m, alpha);
@@ -132,10 +133,68 @@ function drawTiles(ctx, content, m) {
       if (tileKind(x, y) === 'path') {
         if (!drawSprite(ctx, `path${hash(x, y) % 4}`, px, py, m.cellW, m.cellH)) drawPathTile(ctx, px, py, m.cellW, m.cellH, x, y, m);
       } else {
-        if (!drawSprite(ctx, `grass${hash(x, y) % 4}`, px, py, m.cellW, m.cellH)) drawGrassTile(ctx, px, py, m.cellW, m.cellH, x, y, m);
+        const drewGrass = drawSprite(ctx, `grass${grassSpriteIndex(x, y)}`, px, py, m.cellW, m.cellH);
+        if (!drewGrass) drawGrassTile(ctx, px, py, m.cellW, m.cellH, x, y, m);
+        drawGrassVariationOverlay(ctx, px, py, m.cellW, m.cellH, x, y, m);
       }
       drawTileGrid(ctx, px, py, m.cellW, m.cellH, x, y);
     }
+  }
+}
+
+function grassSpriteIndex(x, y) {
+  // Break up atlas repetition by clustering tiles into soft hand-painted families instead of pure modulo noise.
+  const region = Math.floor(x / 2) * 19 + Math.floor(y / 2) * 31;
+  const local = hash(x, y) % 7;
+  return Math.abs(region + local + x * 3 - y * 5) % 4;
+}
+
+function drawGrassVariationOverlay(ctx, x, y, w, h, gx, gy, m) {
+  const n = hash(gx + 41, gy + 73);
+  const family = (Math.floor(gx / 2) + Math.floor(gy / 2) * 3 + n) % 9;
+
+  // Large translucent patches cross tile boundaries, which hides the carpet grid without adding noise.
+  if (family === 0 || family === 4) {
+    pixelDiamond(ctx, x + w * ((n & 1) ? .25 : .76), y + h * ((n & 2) ? .30 : .72), m.tile * (family === 0 ? .34 : .25), family === 0 ? 'rgba(97, 117, 61, .20)' : 'rgba(21, 46, 26, .30)');
+  }
+  if (family === 2) {
+    ctx.fillStyle = 'rgba(111, 126, 67, .18)';
+    ctx.fillRect(Math.floor(x + w * .12), Math.floor(y + h * .18), Math.floor(w * .46), Math.max(2, Math.floor(m.tile * .035)));
+    ctx.fillRect(Math.floor(x + w * .34), Math.floor(y + h * .32), Math.floor(w * .36), Math.max(2, Math.floor(m.tile * .035)));
+  }
+  if (family === 6) {
+    ctx.fillStyle = 'rgba(121, 95, 57, .18)';
+    ctx.fillRect(Math.floor(x + w * .57), Math.floor(y + h * .58), Math.floor(w * .24), Math.max(3, Math.floor(m.tile * .06)));
+    ctx.fillStyle = 'rgba(231, 199, 122, .16)';
+    ctx.fillRect(Math.floor(x + w * .60), Math.floor(y + h * .56), Math.floor(w * .13), 2);
+  }
+  // Sparse landmark clumps: readable on phone, rare enough not to compete with path/build pins.
+  if ((n % 17) === 5) drawGrassClump(ctx, x + w * .70, y + h * .28, m.tile, '#7f914b');
+  if ((n % 23) === 9) drawGrassClump(ctx, x + w * .24, y + h * .68, m.tile * .85, '#4f7138');
+}
+
+function drawGrassClump(ctx, x, y, s, color) {
+  ctx.fillStyle = 'rgba(14, 26, 13, .24)';
+  ctx.fillRect(Math.floor(x - s * .10), Math.floor(y + s * .08), Math.floor(s * .34), Math.max(2, Math.floor(s * .04)));
+  ctx.fillStyle = color;
+  ctx.fillRect(Math.floor(x), Math.floor(y), Math.max(2, Math.floor(s * .05)), Math.floor(s * .20));
+  ctx.fillRect(Math.floor(x + s * .09), Math.floor(y + s * .04), Math.max(2, Math.floor(s * .05)), Math.floor(s * .16));
+  ctx.fillRect(Math.floor(x - s * .08), Math.floor(y + s * .07), Math.max(2, Math.floor(s * .05)), Math.floor(s * .13));
+  ctx.fillStyle = 'rgba(238, 205, 125, .22)';
+  ctx.fillRect(Math.floor(x + s * .03), Math.floor(y - s * .02), Math.max(2, Math.floor(s * .12)), 2);
+}
+
+function drawMacroTerrainAccents(ctx, content, m) {
+  const accents = [
+    { x: 1.8, y: .78, r: .46, c: 'rgba(118, 133, 69, .14)' },
+    { x: 5.6, y: .92, r: .34, c: 'rgba(42, 78, 42, .18)' },
+    { x: 8.25, y: 4.15, r: .42, c: 'rgba(121, 93, 52, .12)' },
+    { x: 2.55, y: 4.42, r: .30, c: 'rgba(93, 114, 58, .16)' }
+  ];
+  for (const a of accents) {
+    const tx = Math.floor(a.x), ty = Math.floor(a.y);
+    if (tx < 0 || ty < 0 || tx >= m.gridW || ty >= m.gridH || tileKind(tx, ty) === 'path') continue;
+    pixelDiamond(ctx, a.x * m.cellW, a.y * m.cellH, m.tile * a.r, a.c);
   }
 }
 
@@ -315,7 +374,7 @@ function drawTowers(ctx, content, state, ui, m) {
 
     if (ui.selectedTowerId === t.id) drawRange(ctx, x, y, lvl.rangeUnits / 1000 * ((m.cellW + m.cellH) / 2), meta);
     const spriteName = t.typeId === 'arrow' ? 'towerArrow' : t.typeId === 'burst' ? 'towerBurst' : 'towerFrost';
-    const drewAsset = drawSprite(ctx, spriteName, x - s * .46, y - s * .64, s * .92, s * 1.08);
+    const drewAsset = drawSprite(ctx, spriteName, x - s * .58, y - s * .82, s * 1.16, s * 1.42);
     if (!drewAsset) {
       drawTowerBase(ctx, x, y, s, meta, t.level);
       if (t.typeId === 'arrow') drawArrowTower(ctx, x, y, s, meta);
@@ -433,7 +492,8 @@ function drawEnemies(ctx, content, state, m, alpha = 0) {
     ctx.fillRect(p.x - s * .48, p.y + s * .42, s * .96, 6);
 
     const spriteName = e.typeId === 'runner' ? 'enemyRunner' : e.typeId === 'brute' ? 'enemyBrute' : 'enemyGrunt';
-    const drewAsset = drawSprite(ctx, spriteName, p.x - s * .56, p.y - s * .68 + bob, s * 1.12, s * 1.12);
+    drawEnemyMotionAccent(ctx, e, p.x, p.y + bob, s, state.tick + alpha);
+    const drewAsset = drawSprite(ctx, spriteName, p.x - s * .62, p.y - s * .76 + bob, s * 1.24, s * 1.24);
     if (!drewAsset) {
       if (e.typeId === 'runner') drawRunner(ctx, p.x, p.y + bob, s, meta, state.tick + alpha);
       else if (e.typeId === 'brute') drawBrute(ctx, p.x, p.y + bob, s, meta);
@@ -442,6 +502,23 @@ function drawEnemies(ctx, content, state, m, alpha = 0) {
 
     drawHealth(ctx, p.x, p.y - s * .88, Math.max(24, s * 1.18), 7, Math.max(0, e.hp / e.maxHp));
     if (e.slow) drawSlowOverlay(ctx, p.x, p.y, s);
+  }
+}
+
+function drawEnemyMotionAccent(ctx, e, x, y, s, tick) {
+  const phase = Math.sin((tick + e.num) * (e.typeId === 'runner' ? .9 : .45));
+  if (e.typeId === 'runner') {
+    ctx.fillStyle = 'rgba(255, 220, 139, .32)';
+    ctx.fillRect(Math.floor(x - s * .86 - phase * 2), Math.floor(y - s * .13), Math.floor(s * .32), Math.max(2, Math.floor(s * .08)));
+    ctx.fillStyle = 'rgba(83, 25, 31, .35)';
+    ctx.fillRect(Math.floor(x - s * .68), Math.floor(y + s * .26 + phase), Math.floor(s * .26), Math.max(2, Math.floor(s * .07)));
+  } else if (e.typeId === 'brute') {
+    ctx.fillStyle = 'rgba(29, 17, 50, .30)';
+    ctx.fillRect(Math.floor(x - s * .65), Math.floor(y + s * .39), Math.floor(s * .28), Math.max(3, Math.floor(s * .08)));
+    ctx.fillRect(Math.floor(x + s * .36), Math.floor(y + s * .38), Math.floor(s * .30), Math.max(3, Math.floor(s * .08)));
+  } else {
+    ctx.fillStyle = 'rgba(239, 216, 144, .26)';
+    ctx.fillRect(Math.floor(x + s * .37), Math.floor(y - s * .08 + phase), Math.floor(s * .18), Math.max(2, Math.floor(s * .11)));
   }
 }
 

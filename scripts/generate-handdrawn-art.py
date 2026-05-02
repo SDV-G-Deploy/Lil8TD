@@ -170,10 +170,67 @@ def enemy_brute(x, y):
     line([(x+10,y+21),(x+24,y+19)], '#cdb6ff', 1)
 
 
+def hero_tower_overlays():
+    # Second-pass silhouettes: make the three towers read as miniature hero pieces even at phone size.
+    # Arrow: tall watch spire + giant bow profile.
+    x, y = 0, 40
+    poly([(x+2,y+38),(x+14,y+28),(x+14,y+49),(x+5,y+51)], '#352418')
+    poly([(x+35,y+27),(x+47,y+35),(x+43,y+50),(x+34,y+45)], '#352418')
+    line([(x+24,y+14),(x+24,y-7)], '#2f2015', 4)
+    line([(x+8,y+4),(x+22,y-4),(x+40,y+4)], '#ffe680', 5)
+    line([(x+8,y+4),(x+22,y+13),(x+40,y+4)], '#6d4c21', 3)
+    poly([(x+34,y-3),(x+48,y+4),(x+35,y+11)], '#fff1a1')
+    line([(x+34,y-3),(x+48,y+4),(x+35,y+11)], INK2, 1)
+    rect(x+18,y+3,x+21,y+19,'#f3d891')
+
+    # Burst: squat armored bomb-cannon; wide top makes it distinct from arrow/frost.
+    x, y = 48, 40
+    poly([(x+2,y+6),(x+37,y-2),(x+48,y+8),(x+11,y+17)], '#361912')
+    line([(x+2,y+6),(x+37,y-2),(x+48,y+8),(x+11,y+17),(x+2,y+6)], INK, 2)
+    rect(x+36,y+3,x+50,y+10,'#160d0b')
+    rect(x+39,y+5,x+47,y+8,'#ffd17966')
+    poly([(x+15,y+2),(x+31,y+0),(x+36,y+13),(x+18,y+17)], '#ef8d42')
+    poly([(x+25,y+8),(x+37,y+18),(x+25,y+30),(x+13,y+18)], '#ffd179')
+    poly([(x+25,y+13),(x+31,y+18),(x+25,y+24),(x+19,y+18)], '#ff6f2d')
+    line([(x+8,y+36),(x+42,y+34)], '#2b1711', 4)
+
+    # Frost: tallest crown and side crystals; slim vertical read, not a cannon.
+    x, y = 96, 40
+    poly([(x+24,y-8),(x+38,y+8),(x+28,y+28),(x+12,y+13)], '#8edff0')
+    poly([(x+24,y-3),(x+31,y+8),(x+25,y+23),(x+18,y+11)], '#dcfbff')
+    poly([(x+7,y+9),(x+18,y-3),(x+18,y+19)], '#62bed6')
+    poly([(x+42,y+10),(x+31,y-2),(x+30,y+20)], '#58abc4')
+    line([(x+24,y-8),(x+38,y+8),(x+28,y+28),(x+12,y+13),(x+24,y-8)], '#12384c', 2)
+    line([(x+24,y-1),(x+25,y+26)], '#ffffff99', 1)
+    line([(x+10,y+14),(x+40,y+10)], '#e6ffff', 3)
+
+
+def enemy_personality_overlays():
+    # Small character accents: feet, tools, scars/speed streaks. Chunky, not noisy.
+    x, y = 0, 104
+    rect(x+4,y+27,x+13,y+31,'#3d291b'); rect(x+21,y+26,x+31,y+30,'#3d291b')
+    rect(x+1,y+18,x+8,y+26,'#a37a3e'); line([(x+2,y+18),(x+8,y+20),(x+8,y+26)], '#f0d990', 1)
+    rect(x+26,y+10,x+30,y+13,'#5c3a20')
+
+    x, y = 32, 104
+    line([(x-1,y+14),(x+8,y+13),(x+17,y+14)], '#ffd885cc', 2)
+    line([(x-1,y+18),(x+9,y+18),(x+15,y+20)], '#ffe0a077', 1)
+    rect(x+2,y+25,x+12,y+28,'#31131b'); rect(x+20,y+24,x+31,y+27,'#31131b')
+    poly([(x+6,y+9),(x+1,y+6),(x+4,y+15)], '#aa3b42')
+
+    x, y = 64, 104
+    rect(x+0,y+21,x+10,y+31,'#2b1b47'); rect(x+24,y+20,x+33,y+30,'#2b1b47')
+    rect(x+11,y+24,x+16,y+31,'#281941'); rect(x+19,y+23,x+25,y+31,'#281941')
+    line([(x+9,y+21),(x+25,y+19)], '#d8c8ff', 1)
+    rect(x+14,y+17,x+22,y+19,'#3c2860')
+
+
 for i in range(4): grass_tile(i * 32, 0, i)
 for i in range(4): path_tile(128 + i * 32, 0, i + 1)
 tower_arrow(0, 40); tower_burst(48, 40); tower_frost(96, 40)
+hero_tower_overlays()
 enemy_grunt(0, 104); enemy_runner(32, 104); enemy_brute(64, 104)
+enemy_personality_overlays()
 # UI ornaments / icon row
 rect(0,144,16,160,'#1e130e')
 poly([(8,144),(16,152),(8,160),(0,152)], '#a97938')
