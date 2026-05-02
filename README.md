@@ -4,7 +4,7 @@ Old school pixel-style top-down tower defense game project.
 
 ## Status
 
-Planning and documentation bootstrap.
+Playable browser prototype + visual direction pre-production for Sprite Set V2.
 
 ## Current direction
 
@@ -20,7 +20,7 @@ It should reuse:
 - LW2B as a source of deterministic simulation, AI structure, balance/data architecture, and testing discipline
 - MultiWebCore as the multiplayer networking core for room/match lifecycle and canonical online input flow
 
-## Initial docs
+## Core docs
 
 Start with:
 
@@ -43,6 +43,15 @@ Start with:
 - `docs/COMMAND_PROTOCOL_DRAFT.md` — game-command payload semantics
 - `docs/REUSE_ANALYSIS.md` — LW2B/MWC reuse boundaries
 
+## Visual direction docs
+
+- `docs/LIL8TD_VISUAL_RESEARCH_PACK_V1_DANDADAN.md` — visual research pack, stylistic branches, palette logic, and final direction recommendation
+- `docs/LIL8TD_ART_BRIEF_V2.md` — production art brief for Sprite Set V2
+- `docs/LIL8TD_SPRITE_SET_V2_TASKLIST.md` — concrete asset tasklist and execution order for Sprite Set V2
+- `docs/LIL8TD_VISUAL_DOCTRINE_V1.md` — current live visual doctrine / review language
+- `docs/ART_FOUNDATION_MIGRATION_PLAN.md` — asset-migration framing from procedural prototype to authored pixel art
+- `docs/PIXEL_STYLE_GUIDE_V0.md` — earlier visual foundation / historical reference
+
 Supporting plans:
 
 - `docs/CONTENT_PLAN_V0.md`
@@ -58,6 +67,16 @@ Machine-readable content:
 ## Local playable slice
 
 A first local-only vertical slice now exists: one fixed-path map, scripted waves, Arrow/Burst/Frost towers, tower placement, upgrades, selling, leaks/lives, win/loss, HUD, and a conservative scripted bot for smoke validation.
+
+The current visual workstream is moving from prototype art toward **Sprite Set V2** under the direction:
+
+**Cozy RTS Miniatures + Dandadan Accents**
+
+That means:
+- calm handcrafted battlefield base
+- stronger hero-tower silhouettes
+- more characterful enemies
+- selective crimson/teal supernatural accent energy
 
 ### Run locally
 
