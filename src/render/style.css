@@ -34,6 +34,8 @@ body{
 .topbar:before{content:"";position:absolute;left:8px;right:8px;top:5px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent);opacity:.38}
 .topbar:after{content:"";position:absolute;inset:7px;border:1px solid rgba(224,193,122,.18);pointer-events:none}
 .topbar strong{letter-spacing:.12em;text-transform:uppercase;color:#ffe59a;text-shadow:2px 2px 0 #27170b;font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+.topbar strong:before{content:"✦";color:#d79d52;margin-right:8px;text-shadow:1px 1px 0 #120b07}
+.topbar strong:after{content:"✦";color:#d79d52;margin-left:8px;text-shadow:1px 1px 0 #120b07}
 .muted{color:#c5b68c}
 .layout{display:grid;grid-template-columns:minmax(640px,960px) 292px;gap:18px}
 canvas{
@@ -63,8 +65,9 @@ button{
   box-shadow:inset 0 2px 0 rgba(255,244,190,.12),inset 0 -4px 0 rgba(0,0,0,.30),0 2px 0 #120c09;
   text-shadow:1px 1px 0 #111;
 }
+button:before{content:"◆";display:inline-block;margin-right:7px;color:#c99750;text-shadow:1px 1px 0 #0d0806}
 button:hover{filter:brightness(1.12);border-color:#d3b56f}
-button.active{background:linear-gradient(180deg,#856338,#4a3521);border-color:#ffe09a;color:#fff4c6}
+button.active{background:linear-gradient(180deg,#856338,#4a3521);border-color:#ffe09a;color:#fff4c6;box-shadow:inset 0 2px 0 rgba(255,244,190,.18),inset 0 -4px 0 rgba(0,0,0,.30),0 0 0 2px rgba(255,224,154,.12),0 2px 0 #120c09}
 button:disabled{opacity:.45;cursor:not-allowed}
 .help{font-size:13px;line-height:1.45;color:#c7b88e}
 h2{

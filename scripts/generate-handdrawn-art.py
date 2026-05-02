@@ -39,6 +39,11 @@ def grass_tile(x, y, seed):
         # little stone/sprout landmark for phone-scale variety
         poly([(x+19,y+18),(x+25,y+17),(x+27,y+22),(x+22,y+24)], '#8b805f')
         line([(x+20,y+18),(x+25,y+17)], '#d8bd78', 1)
+    if seed == 3:
+        # one tiny storybook mushroom; rare and chunky enough not to become noise
+        rect(x+12,y+21,x+14,y+25,'#d7bd83')
+        poly([(x+9,y+20),(x+14,y+17),(x+20,y+21)], '#b95a42')
+        rect(x+13,y+19,x+15,y+20,'#ffd98a')
     # hand outline
     line([(x+2,y+4),(x+28,y+2),(x+30,y+11),(x+29,y+29),(x+7,y+30),(x+2,y+24),(x+2,y+4)], '#102116', 1)
 
@@ -62,61 +67,78 @@ def path_tile(x, y, seed):
         line([(x+px+1,y+4),(x+px+5,y+4)], '#e2c77c', 1)
     for i, px in enumerate([7, 18 + (seed % 4)]):
         poly([(x+px,y+25),(x+px+7,y+24),(x+px+8,y+28),(x+px+1,y+29)], '#66523b')
+    if seed == 2:
+        # small warm road marker, useful for handcrafted rhythm but low priority
+        rect(x+27,y+15,x+30,y+19,'#3b291a')
+        rect(x+28,y+12,x+29,y+16,'#d4a85f')
     line([(x+3,y+10+wob),(x+14,y+7),(x+27,y+8),(x+30,y+14),(x+27,y+24),(x+15,y+26),(x+4,y+23),(x+2,y+15),(x+3,y+10+wob)], INK2, 1)
 
 
 def tower_base(x, y, stone, roof, trim):
     # exaggerated toy-soldier tower base, intentionally crooked
-    poly([(x+5,y+50),(x+43,y+49),(x+47,y+54),(x+8,y+55)], '#00000080')
-    poly([(x+8,y+35),(x+40,y+34),(x+43,y+48),(x+6,y+50)], '#1a100c')
-    poly([(x+10,y+17),(x+36,y+14),(x+40,y+43),(x+12,y+45)], stone)
-    line([(x+10,y+17),(x+36,y+14),(x+40,y+43),(x+12,y+45),(x+10,y+17)], INK, 2)
-    rect(x+15,y+22,x+20,y+26,'#f2ddb055'); rect(x+29,y+20,x+34,y+24,'#f2ddb055')
+    poly([(x+4,y+50),(x+44,y+48),(x+48,y+54),(x+8,y+56)], '#00000088')
+    poly([(x+6,y+36),(x+41,y+34),(x+45,y+48),(x+5,y+51)], '#1a100c')
+    poly([(x+9,y+17),(x+36,y+13),(x+41,y+43),(x+12,y+46)], stone)
+    line([(x+9,y+17),(x+36,y+13),(x+41,y+43),(x+12,y+46),(x+9,y+17)], INK, 2)
+    rect(x+14,y+22,x+20,y+27,'#f2ddb055'); rect(x+29,y+20,x+35,y+25,'#f2ddb055')
     line([(x+13,y+31),(x+38,y+29)], '#26232a', 3)
-    poly([(x+6,y+10),(x+39,y+7),(x+43,y+17),(x+8,y+20)], roof)
-    line([(x+6,y+10),(x+39,y+7),(x+43,y+17),(x+8,y+20),(x+6,y+10)], INK, 2)
-    line([(x+10,y+9),(x+36,y+6)], trim, 3)
-    line([(x+13,y+18),(x+36,y+16)], '#ffffff33', 1)
+    line([(x+15,y+38),(x+36,y+36)], '#f6d99844', 1)
+    poly([(x+5,y+10),(x+39,y+6),(x+44,y+17),(x+8,y+21)], roof)
+    line([(x+5,y+10),(x+39,y+6),(x+44,y+17),(x+8,y+21),(x+5,y+10)], INK, 2)
+    line([(x+9,y+9),(x+37,y+5)], trim, 3)
+    line([(x+13,y+18),(x+37,y+16)], '#ffffff33', 1)
+    # cheeky inset badge/face hint gives warmth without becoming UI clutter
+    rect(x+21,y+25,x+26,y+29,'#1b1411')
+    rect(x+22,y+26,x+24,y+28,'#ffe7a166')
 
 
 def tower_arrow(x, y):
     tower_base(x, y, '#666166', '#7b5a2e', '#ffe680')
-    # giant bow silhouette + banner makes it unmistakable
-    line([(x+23,y+16),(x+25,y+1)], '#4b321d', 3)
-    line([(x+13,y+6),(x+22,y+1),(x+34,y+5)], '#f0cf54', 3)
-    line([(x+13,y+6),(x+21,y+10),(x+34,y+5)], '#7e5a24', 1)
-    poly([(x+34,y+0),(x+46,y+4),(x+36,y+8)], '#f8eaa1')
-    rect(x+8,y+1,x+12,y+11,'#b9472e'); line([(x+8,y+1),(x+12,y+1),(x+12,y+11)], INK, 1)
+    # jaunty oversized bow + pennant: reliable, toy-soldier, not sleek/mobile
+    line([(x+23,y+17),(x+25,y-2)], '#4b321d', 3)
+    line([(x+11,y+5),(x+22,y-1),(x+36,y+5)], '#f0cf54', 4)
+    line([(x+11,y+5),(x+21,y+11),(x+36,y+5)], '#7e5a24', 2)
+    line([(x+12,y+5),(x+35,y+5)], '#fff1a1', 1)
+    poly([(x+35,y-1),(x+47,y+4),(x+36,y+9)], '#f8eaa1')
+    line([(x+35,y-1),(x+47,y+4),(x+36,y+9)], INK2, 1)
+    rect(x+7,y+0,x+12,y+12,'#b9472e'); line([(x+7,y+0),(x+12,y+0),(x+12,y+12)], INK, 1)
 
 
 def tower_burst(x, y):
     tower_base(x, y, '#6b584c', '#82371e', '#ffd179')
-    # squat cannon/cauldron with bright ember mouth
-    poly([(x+7,y+4),(x+36,y+0),(x+43,y+7),(x+12,y+13)], '#4b2517')
-    line([(x+7,y+4),(x+36,y+0),(x+43,y+7),(x+12,y+13),(x+7,y+4)], INK, 2)
-    rect(x+34,y+3,x+46,y+8,'#1b1110')
-    poly([(x+18,y+3),(x+30,y+1),(x+32,y+10),(x+17,y+12)], '#ef8d42')
-    poly([(x+24,y+9),(x+32,y+16),(x+24,y+24),(x+16,y+16)], '#ffd179')
-    poly([(x+24,y+12),(x+28,y+16),(x+24,y+20),(x+20,y+16)], '#ff6f2d')
+    # squat kettle-cannon with a friendly ember belly
+    poly([(x+5,y+5),(x+36,y+0),(x+44,y+8),(x+12,y+14)], '#4b2517')
+    line([(x+5,y+5),(x+36,y+0),(x+44,y+8),(x+12,y+14),(x+5,y+5)], INK, 2)
+    rect(x+34,y+3,x+47,y+9,'#1b1110')
+    rect(x+38,y+4,x+45,y+7,'#ffbd6a44')
+    poly([(x+17,y+3),(x+31,y+1),(x+33,y+11),(x+16,y+13)], '#ef8d42')
+    poly([(x+24,y+8),(x+34,y+16),(x+24,y+25),(x+14,y+16)], '#ffd179')
+    poly([(x+24,y+12),(x+29,y+16),(x+24,y+21),(x+19,y+16)], '#ff6f2d')
+    line([(x+15,y+16),(x+33,y+16)], '#fff0a855', 1)
 
 
 def tower_frost(x, y):
     tower_base(x, y, '#526b77', '#245e78', '#dffcff')
-    # tall icy obelisk/crown
-    poly([(x+23,y-4),(x+34,y+8),(x+27,y+22),(x+15,y+11)], '#8ee6f6')
-    poly([(x+23,y-1),(x+28,y+8),(x+24,y+18),(x+18,y+10)], '#dffcff')
-    line([(x+23,y-4),(x+34,y+8),(x+27,y+22),(x+15,y+11),(x+23,y-4)], '#12384c', 2)
+    # playful crystal crown, taller and more iconic but still icy/old-school
+    poly([(x+23,y-6),(x+35,y+8),(x+27,y+23),(x+14,y+11)], '#8ee6f6')
+    poly([(x+23,y-2),(x+29,y+8),(x+24,y+19),(x+18,y+10)], '#dffcff')
+    poly([(x+10,y+7),(x+17,y+0),(x+18,y+15)], '#65bfd4')
+    poly([(x+37,y+7),(x+31,y+1),(x+29,y+15)], '#5eb2ca')
+    line([(x+23,y-6),(x+35,y+8),(x+27,y+23),(x+14,y+11),(x+23,y-6)], '#12384c', 2)
     line([(x+11,y+11),(x+37,y+8)], '#dffcff', 3)
-    line([(x+23,y+0),(x+24,y+19)], '#ffffff88', 1)
+    line([(x+23,y+0),(x+24,y+20)], '#ffffff88', 1)
 
 
 def enemy_grunt(x, y):
     # tan soldier with shield and horned cap
     poly([(x+7,y+15),(x+25,y+13),(x+27,y+29),(x+6,y+30)], '#6b4c2b')
-    poly([(x+9,y+6),(x+23,y+5),(x+25,y+20),(x+8,y+22)], '#d5b96e')
+    poly([(x+8,y+7),(x+23,y+5),(x+26,y+20),(x+8,y+23)], '#d5b96e')
     line([(x+9,y+6),(x+23,y+5),(x+25,y+20),(x+8,y+22),(x+9,y+6)], INK, 1)
-    poly([(x+8,y+2),(x+24,y+3),(x+21,y+7),(x+11,y+7)], '#f0d990')
+    poly([(x+7,y+2),(x+24,y+3),(x+21,y+8),(x+11,y+8)], '#f0d990')
+    poly([(x+6,y+4),(x+1,y+1),(x+8,y+8)], '#e7cc82')
+    poly([(x+24,y+4),(x+31,y+1),(x+23,y+8)], '#e7cc82')
     rect(x+12,y+13,x+15,y+16,'#2f2118'); rect(x+19,y+12,x+22,y+15,'#2f2118')
+    rect(x+16,y+17,x+20,y+18,'#8b5d34')
     poly([(x+2,y+17),(x+10,y+18),(x+10,y+27),(x+3,y+25)], '#8b6a38')
     line([(x+3,y+17),(x+10,y+18),(x+10,y+27)], '#e4c87a', 1)
     rect(x+22,y+21,x+31,y+25,'#4c331f')
@@ -124,25 +146,28 @@ def enemy_grunt(x, y):
 
 def enemy_runner(x, y):
     # red scarf/fox-like runner with long readable motion shape
-    poly([(x+2,y+20),(x+13,y+16),(x+28,y+19),(x+31,y+24),(x+12,y+24)], '#762231')
-    poly([(x+6,y+11),(x+22,y+8),(x+29,y+14),(x+22,y+22),(x+7,y+20)], '#de5753')
-    poly([(x+20,y+3),(x+30,y+7),(x+25,y+12)], '#f07a57')
+    poly([(x+1,y+20),(x+13,y+16),(x+29,y+19),(x+31,y+24),(x+11,y+25)], '#762231')
+    poly([(x+5,y+11),(x+22,y+8),(x+30,y+14),(x+22,y+22),(x+7,y+21)], '#de5753')
+    poly([(x+20,y+2),(x+31,y+7),(x+25,y+13)], '#f07a57')
+    poly([(x+18,y+5),(x+12,y+1),(x+15,y+10)], '#f07a57')
     line([(x+6,y+11),(x+22,y+8),(x+29,y+14),(x+22,y+22),(x+7,y+20),(x+6,y+11)], INK, 1)
     rect(x+23,y+10,x+26,y+13,'#ffe6d1')
-    line([(x+0,y+15),(x+7,y+14),(x+14,y+15)], '#ffd88588', 2)
+    line([(x+0,y+15),(x+7,y+14),(x+15,y+15)], '#ffd88599', 2)
+    line([(x+0,y+18),(x+8,y+18),(x+13,y+19)], '#ffe0a055', 1)
     rect(x+5,y+24,x+13,y+27,'#3d1720'); rect(x+20,y+23,x+29,y+26,'#3d1720')
 
 
 def enemy_brute(x, y):
     # big purple ogre, huge head/arms/horns
-    poly([(x+3,y+15),(x+29,y+13),(x+31,y+30),(x+2,y+31)], '#3e2864')
-    poly([(x+6,y+5),(x+26,y+4),(x+29,y+21),(x+5,y+23)], '#8e6bd7')
+    poly([(x+2,y+15),(x+30,y+13),(x+32,y+30),(x+1,y+31)], '#3e2864')
+    poly([(x+5,y+5),(x+27,y+4),(x+30,y+21),(x+4,y+24)], '#8e6bd7')
     line([(x+6,y+5),(x+26,y+4),(x+29,y+21),(x+5,y+23),(x+6,y+5)], '#1b102d', 2)
-    poly([(x+3,y+1),(x+10,y+6),(x+7,y+10)], '#d6c4ff')
-    poly([(x+29,y+1),(x+22,y+6),(x+25,y+10)], '#d6c4ff')
+    poly([(x+2,y+0),(x+11,y+6),(x+7,y+11)], '#d6c4ff')
+    poly([(x+30,y+0),(x+21,y+6),(x+25,y+11)], '#d6c4ff')
     rect(x+12,y+13,x+16,y+17,'#1d1132'); rect(x+20,y+12,x+24,y+16,'#1d1132')
-    rect(x+3,y+20,x+10,y+28,'#2b1b47'); rect(x+24,y+19,x+31,y+27,'#2b1b47')
-    line([(x+11,y+20),(x+23,y+19)], '#cdb6ff', 1)
+    rect(x+2,y+20,x+10,y+29,'#2b1b47'); rect(x+24,y+19,x+32,y+28,'#2b1b47')
+    rect(x+14,y+18,x+22,y+20,'#50397c')
+    line([(x+10,y+21),(x+24,y+19)], '#cdb6ff', 1)
 
 
 for i in range(4): grass_tile(i * 32, 0, i)

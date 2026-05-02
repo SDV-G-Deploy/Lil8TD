@@ -255,6 +255,20 @@ function drawPathOrnaments(ctx, content, m) {
     ctx.fillRect(px + 7, cy - 4, 9, 3);
   }
 
+  // A few low-priority toy-board roadside flags add warmth without stealing lane priority.
+  for (let x = 1.25; x < m.gridW - .5; x += 2.55) {
+    const px = x * m.cellW + ((Math.floor(x * 10) % 2) ? 5 : -3);
+    const top = cy - m.cellH * .47;
+    ctx.fillStyle = 'rgba(19, 12, 8, .34)';
+    ctx.fillRect(px - 2, top + 16, 13, 3);
+    ctx.fillStyle = '#6b5632';
+    ctx.fillRect(px, top, 3, 19);
+    ctx.fillStyle = 'rgba(213, 163, 81, .54)';
+    ctx.fillRect(px + 3, top + 2, 10, 7);
+    ctx.fillStyle = 'rgba(255, 231, 166, .22)';
+    ctx.fillRect(px + 5, top + 3, 4, 1);
+  }
+
   // entrance / keep markers: decorative but small enough not to compete with enemies.
   drawGateMarker(ctx, 18, cy, 'start');
   drawGateMarker(ctx, m.gridW * m.cellW - 18, cy, 'end');
@@ -494,12 +508,16 @@ function drawBrute(ctx, x, y, s, meta) {
 }
 
 function drawSlowOverlay(ctx, x, y, s) {
-  ctx.strokeStyle = PALETTE.frost;
-  ctx.lineWidth = 3;
-  ctx.strokeRect(Math.floor(x - s * .62), Math.floor(y - s * .62), Math.floor(s * 1.24), Math.floor(s * 1.24));
+  ctx.strokeStyle = 'rgba(142, 223, 240, .78)';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([5, 4]);
+  ctx.strokeRect(Math.floor(x - s * .64), Math.floor(y - s * .64), Math.floor(s * 1.28), Math.floor(s * 1.28));
+  ctx.setLineDash([]);
   ctx.fillStyle = 'rgba(142, 223, 240, .20)';
   ctx.fillRect(x - s * .44, y - s * .50, s * .88, s * .88);
   pixelDiamond(ctx, x + s * .45, y - s * .42, s * .12, '#dcfbff');
+  ctx.fillStyle = 'rgba(220, 251, 255, .42)';
+  ctx.fillRect(x - s * .50, y + s * .34, s * .22, 2);
 }
 
 function drawEffects(ctx, content, state, m, alpha = 0) {
@@ -529,6 +547,12 @@ function drawEffects(ctx, content, state, m, alpha = 0) {
 }
 
 function drawBolt(ctx, from, to, color) {
+  ctx.strokeStyle = 'rgba(49, 33, 16, .45)';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.moveTo(from.x + 1, from.y + 2);
+  ctx.lineTo(to.x + 1, to.y + 2);
+  ctx.stroke();
   ctx.strokeStyle = '#fff0a8';
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -537,25 +561,40 @@ function drawBolt(ctx, from, to, color) {
   ctx.stroke();
   ctx.fillStyle = color;
   pixelDiamond(ctx, to.x, to.y, 6, color);
+  ctx.fillStyle = 'rgba(255, 244, 190, .55)';
+  ctx.fillRect(to.x - 8, to.y - 1, 16, 2);
 }
 
 function drawBlast(ctx, from, to, meta) {
+  ctx.strokeStyle = 'rgba(53, 28, 18, .45)';
+  ctx.lineWidth = 7;
+  ctx.beginPath();
+  ctx.moveTo(from.x + 1, from.y + 2);
+  ctx.lineTo(to.x + 1, to.y + 2);
+  ctx.stroke();
   ctx.strokeStyle = meta.color;
-  ctx.lineWidth = 5;
+  ctx.lineWidth = 4;
   ctx.beginPath();
   ctx.moveTo(from.x, from.y);
   ctx.lineTo(to.x, to.y);
   ctx.stroke();
   ctx.strokeStyle = 'rgba(255, 209, 123, .78)';
-  ctx.lineWidth = 4;
+  ctx.lineWidth = 3;
   ctx.beginPath();
-  ctx.arc(to.x, to.y, 28, 0, Math.PI * 2);
+  ctx.arc(to.x, to.y, 22, 0, Math.PI * 2);
   ctx.stroke();
-  pixelDiamond(ctx, to.x, to.y, 13, '#ffd17b');
+  pixelDiamond(ctx, to.x, to.y, 12, '#ffd17b');
+  pixelDiamond(ctx, to.x, to.y, 5, '#ff6f2d');
 }
 
 function drawFrostBeam(ctx, from, to, meta) {
-  ctx.strokeStyle = 'rgba(220, 251, 255, .75)';
+  ctx.strokeStyle = 'rgba(20, 52, 70, .40)';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(from.x + 1, from.y + 2);
+  ctx.lineTo(to.x + 1, to.y + 2);
+  ctx.stroke();
+  ctx.strokeStyle = 'rgba(220, 251, 255, .78)';
   ctx.lineWidth = 3;
   ctx.beginPath();
   ctx.moveTo(from.x, from.y);
@@ -568,6 +607,8 @@ function drawFrostBeam(ctx, from, to, meta) {
   ctx.lineTo(to.x + 5, to.y);
   ctx.stroke();
   pixelDiamond(ctx, to.x, to.y, 9, meta.trim);
+  ctx.fillStyle = 'rgba(220, 251, 255, .50)';
+  ctx.fillRect(to.x - 10, to.y + 7, 20, 2);
 }
 
 function drawHover(ctx, content, state, ui, m) {

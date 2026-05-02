@@ -249,3 +249,30 @@ Still remaining for future art passes:
 - Expand UI atlas usage into buttons/cards instead of relying mostly on CSS chrome.
 - Create more terrain transition logic if the map grows beyond the current single-lane board.
 - Do a second review from live mobile screenshots; the success criterion is obvious charm at a glance, not subtle asset-diff correctness.
+
+---
+
+## 14. Charming stylization pass — May 2026
+
+Why slight cartoon stylization is useful:
+
+- Lil8TD units are very small on phone-width screenshots; a controlled cartoon push makes role shapes read faster than surface detail.
+- Toy-soldier exaggeration gives towers/enemies personality while preserving the old-school RTS board feeling.
+- Warm, handmade asymmetry helps the game feel authored rather than procedurally decorated.
+
+Guardrails for this direction:
+
+- Keep colors earthy and warm; role colors may pop, but never become neon or candy-saturated.
+- Prefer silhouette exaggeration over glossy gradients, plastic highlights, or generic mobile-game bounce.
+- Add only chunky, low-count decorative accents; no confetti noise across terrain or path.
+- FX should be brief, local, and directional. They may improve impact readability but must not obscure enemies, HP bars, or placement reads.
+- UI ornaments should feel carved/field-command-like, not heavy chrome competing with the board.
+
+What changed in this pass:
+
+- Towers were pushed toward more lovable toy-fort silhouettes: arrow got a jauntier oversized bow/pennant, burst a friendlier kettle-cannon/ember read, frost a taller playful crystal crown.
+- Enemies gained stronger tiny-unit character: grunt has bigger horn/cap/shield personality, runner has clearer fox-like ears and speed streaks, brute is wider with larger horns/arms.
+- Attack effects gained restrained shadow/highlight layering and smaller impact accents for juicier feedback without particle noise.
+- Slow feedback became a lighter dashed icy box with a small ground glint, keeping it readable but less blocky.
+- Terrain/path received only rare storybook accents and roadside flags, preserving the path/build-tile hierarchy.
+- UI chrome received tiny ornamental glyphs on the command plaque/buttons to add charm without increasing layout weight.
