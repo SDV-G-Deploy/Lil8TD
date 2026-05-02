@@ -10,13 +10,14 @@ const hud = document.querySelector('#hud');
 const towerButtons = document.querySelector('#towerButtons');
 const selectedPanel = document.querySelector('#selectedPanel');
 const renderer = makeRenderer(canvas, content);
+const TOWER_LABELS = { arrow: '▲ Arrow', burst: '✦ Burst', frost: '✣ Frost' };
 
 let state, ui, bot;
 function reset() { state = createInitialState(content); ui = { buildType:'arrow', selectedTowerId:null, hover:null, paused:false, bot:false, seq:1 }; bot = createAutoplayer(); renderButtons(); render(); }
 function renderButtons() {
   towerButtons.innerHTML = '';
   for (const t of content.ruleset.towers) {
-    const b = document.createElement('button'); b.textContent = `${t.name} (${t.buildCost})`; b.className = ui.buildType === t.id ? 'active' : ''; b.onclick = () => { ui.buildType = t.id; ui.selectedTowerId = null; renderButtons(); render(); }; towerButtons.appendChild(b);
+    const b = document.createElement('button'); b.textContent = `${TOWER_LABELS[t.id] ?? t.name} · ${t.buildCost}cr`; b.className = ui.buildType === t.id ? 'active' : ''; b.onclick = () => { ui.buildType = t.id; ui.selectedTowerId = null; renderButtons(); render(); }; towerButtons.appendChild(b);
   }
 }
 function selectedInfo() {
