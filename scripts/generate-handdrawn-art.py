@@ -2,7 +2,7 @@ from PIL import Image, ImageDraw
 from pathlib import Path
 
 S = 4
-W, H = 256 * S, 176 * S
+W, H = 256 * S, 256 * S
 img = Image.new('RGBA', (W, H), (0, 0, 0, 0))
 d = ImageDraw.Draw(img)
 
@@ -250,6 +250,170 @@ poly([(8,149),(11,153),(8,157),(5,153)], '#4a2e1d')
 rect(24,145,40,159,'#1b110d'); poly([(26,152),(33,146),(38,153),(31,158)], '#e3c85d'); line([(26,152),(33,146),(38,153)], '#fff1a1', 1)
 rect(48,145,64,159,'#1b110d'); poly([(50,154),(56,146),(63,153),(56,159)], '#ef8d42'); poly([(55,151),(59,153),(56,157),(53,153)], '#ffd179')
 rect(72,145,88,159,'#1b110d'); poly([(80,145),(87,153),(80,160),(73,153)], '#8edff0'); line([(80,147),(80,158)], '#e6ffff', 1)
+
+
+# ---------------------------------------------------------------- Sprite Set V2 demo expansion
+# New pieces keep the same chunky stone/wood/brass grammar. Crimson and teal are the
+# "supernatural accent" colours from the visual doctrine, used sparingly.
+
+def tower_piercer(x, y):
+    tower_base(x, y, '#5a5566', '#5a1c2a', '#ff9aa8')
+    # Hero: tall ballista lance; the longest horizontal spear, crimson tip = "committed damage"
+    poly([(x+14,y+16),(x+34,y+14),(x+36,y+20),(x+15,y+22)], '#2a1a14')
+    line([(x+24,y+16),(x+24,y-2)], '#2f2015', 6)
+    line([(x+24,y+16),(x+24,y-2)], '#7a5530', 3)
+    poly([(x+2,y+2),(x+40,y-4),(x+42,y+1),(x+3,y+7)], '#3b2618')
+    line([(x+3,y+3),(x+40,y-2)], '#c7a26a', 2)
+    poly([(x+39,y-9),(x+48,y-2),(x+40,y+5)], '#d3263f')
+    poly([(x+41,y-5),(x+46,y-2),(x+41,y+1)], '#ff9aa8')
+    line([(x+39,y-9),(x+48,y-2),(x+40,y+5),(x+39,y-9)], INK, 1)
+    poly([(x+1,y-2),(x+7,y+1),(x+2,y+9)], '#8a6a3c')
+    rect(x+20,y-6,x+28,y-1,'#c7a26a'); rect(x+22,y-5,x+26,y-3,'#fff1c1')
+    line([(x+8,y+14),(x+12,y+1)], '#c7a26a', 1); line([(x+36,y+12),(x+33,y+0)], '#c7a26a', 1)
+
+
+def tower_beacon(x, y):
+    tower_base(x, y, '#5d6a5a', '#3d5a4c', '#b8fff0')
+    # Hero: little shrine roof with a hovering teal lantern-orb; reads as "support glow", no weapon
+    poly([(x+8,y+14),(x+24,y+2),(x+40,y+14),(x+36,y+18),(x+12,y+18)], '#284a3e')
+    line([(x+8,y+14),(x+24,y+2),(x+40,y+14)], INK, 2)
+    line([(x+12,y+13),(x+24,y+4),(x+36,y+13)], '#9fe8d2', 1)
+    rect(x+14,y+16,x+17,y+27,'#3a2a1c'); rect(x+31,y+16,x+34,y+27,'#3a2a1c')
+    poly([(x+24,y-12),(x+33,y-3),(x+24,y+7),(x+15,y-3)], '#2fd1b4')
+    poly([(x+24,y-8),(x+29,y-3),(x+24,y+3),(x+19,y-3)], '#b8fff0')
+    line([(x+24,y-12),(x+33,y-3),(x+24,y+7),(x+15,y-3),(x+24,y-12)], '#0d3a33', 1)
+    rect(x+23,y-5,x+25,y-2,'#ffffff')
+    for dx, dy in [(-13,-6),(12,-9),(-9,6),(14,4)]:
+        rect(x+24+dx,y+dy,x+26+dx,y+dy+2,'#8ff5dd')
+
+
+def enemy_swarmling(x, y):
+    # tiny green moss-imp; small body, big eyes, quick legs
+    poly([(x+9,y+16),(x+23,y+15),(x+25,y+27),(x+8,y+28)], '#3d5a22')
+    poly([(x+10,y+12),(x+22,y+11),(x+24,y+22),(x+9,y+23)], '#8fbf4a')
+    line([(x+10,y+12),(x+22,y+11),(x+24,y+22),(x+9,y+23),(x+10,y+12)], INK, 1)
+    poly([(x+11,y+12),(x+8,y+6),(x+14,y+11)], '#b9de6a'); poly([(x+21,y+11),(x+25,y+5),(x+19,y+11)], '#b9de6a')
+    rect(x+12,y+15,x+15,y+18,'#fff6d0'); rect(x+18,y+14,x+21,y+17,'#fff6d0')
+    rect(x+13,y+16,x+15,y+18,'#1b2410'); rect(x+19,y+15,x+21,y+17,'#1b2410')
+    rect(x+9,y+27,x+13,y+30,'#24331a'); rect(x+19,y+27,x+23,y+30,'#24331a')
+
+
+def enemy_shielded(x, y):
+    # steel-blue bearer behind a big tower shield with a teal rune
+    poly([(x+8,y+14),(x+24,y+12),(x+27,y+29),(x+7,y+30)], '#2e3a52')
+    poly([(x+9,y+5),(x+22,y+4),(x+24,y+17),(x+9,y+18)], '#7c8db0')
+    line([(x+9,y+5),(x+22,y+4),(x+24,y+17),(x+9,y+18),(x+9,y+5)], INK, 1)
+    rect(x+11,y+9,x+21,y+11,'#1a2133'); rect(x+13,y+9,x+15,y+11,'#ffe28a'); rect(x+18,y+9,x+20,y+11,'#ffe28a')
+    poly([(x+15,y+1),(x+18,y+0),(x+17,y+5)], '#c9d6f0')
+    # shield on the leading (right) side
+    poly([(x+17,y+12),(x+31,y+11),(x+31,y+25),(x+24,y+31),(x+17,y+25)], '#9aa9c4')
+    poly([(x+19,y+14),(x+29,y+13),(x+29,y+24),(x+24,y+28),(x+19,y+24)], '#5d6f92')
+    line([(x+17,y+12),(x+31,y+11),(x+31,y+25),(x+24,y+31),(x+17,y+25),(x+17,y+12)], INK, 1)
+    poly([(x+24,y+15),(x+27,y+20),(x+24,y+25),(x+21,y+20)], '#3fe0c5')
+    line([(x+18,y+13),(x+30,y+12)], '#e6efff', 1)
+    rect(x+8,y+28,x+14,y+31,'#1b2233')
+
+
+def enemy_warlord(x, y):
+    # 48x40 boss: mossy stone ogre-king with crimson crown and teal eyes
+    poly([(x+3,y+18),(x+45,y+16),(x+47,y+38),(x+2,y+39)], '#2a3a24')
+    poly([(x+7,y+7),(x+41,y+6),(x+44,y+30),(x+5,y+32)], '#5f7a48')
+    line([(x+7,y+7),(x+41,y+6),(x+44,y+30),(x+5,y+32),(x+7,y+7)], INK, 2)
+    poly([(x+9,y+9),(x+20,y+8),(x+16,y+20),(x+8,y+22)], '#86a05e')
+    poly([(x+12,y+7),(x+15,y-0),(x+19,y+5),(x+24,y-2),(x+29,y+5),(x+33,y+0),(x+36,y+7)], '#d3263f')
+    line([(x+12,y+7),(x+36,y+7)], '#ffd18a', 2)
+    rect(x+16,y+14,x+21,y+18,'#0f1b14'); rect(x+28,y+13,x+33,y+17,'#0f1b14')
+    rect(x+17,y+15,x+20,y+17,'#3fe0c5'); rect(x+29,y+14,x+32,y+16,'#3fe0c5')
+    rect(x+19,y+22,x+31,y+24,'#2a1a14'); rect(x+21,y+22,x+23,y+26,'#efe2b8'); rect(x+27,y+22,x+29,y+26,'#efe2b8')
+    rect(x+0,y+20,x+8,y+34,'#3c5232'); rect(x+40,y+19,x+48,y+33,'#3c5232')
+    for px, py in [(10,26),(36,24),(24,30)]: rect(x+px,y+py,x+px+3,y+py+2,'#a9c46a')
+    line([(x+44,y+8),(x+47,y+38)], '#7a5530', 3)
+
+
+def corner_tile(img_x, img_y):
+    # road arriving from the West edge and leaving through the South edge (quarter annulus)
+    import math
+    rect(img_x, img_y, img_x+32, img_y+32, '#24150e')
+    poly([(img_x,img_y),(img_x+32,img_y),(img_x+32,img_y+32),(img_x+26,img_y+32),(img_x+20,img_y+12),(img_x,img_y+6)], '#3b291a')
+    def band(r0, r1, c, jitter=0):
+        pts = []
+        for i in range(0, 10):
+            a = math.pi/2 * i/9
+            pts.append((img_x + math.sin(a)*r1, img_y + 32 - math.cos(a)*r1))
+        for i in range(9, -1, -1):
+            a = math.pi/2 * i/9
+            pts.append((img_x + math.sin(a)*r0, img_y + 32 - math.cos(a)*r0))
+        poly(pts, c)
+    band(4, 27, '#2e1e14')
+    band(6, 25, '#5c371d')
+    band(8, 22, '#a36932')
+    band(11, 19, '#c9833d')
+    for a in (0.25, 0.75, 1.25):
+        cx, cy = img_x + math.sin(a)*26, img_y + 32 - math.cos(a)*26
+        poly([(cx-2,cy-2),(cx+3,cy-2),(cx+3,cy+1),(cx-2,cy+2)], '#8d7a55')
+        line([(cx-1,cy-2),(cx+2,cy-2)], '#e2c77c', 1)
+    line([(img_x+1,img_y+11),(img_x+13,img_y+15),(img_x+19,img_y+22),(img_x+21,img_y+31)], '#e0ad5c', 1)
+
+
+def spawn_rift(x, y):
+    # crimson/teal rift portal the raiders pour out of (Dandadan accent, small and contained)
+    poly([(x+4,y+30),(x+28,y+30),(x+30,y+26),(x+2,y+26)], '#00000077')
+    poly([(x+6,y+28),(x+5,y+10),(x+10,y+3),(x+22,y+3),(x+27,y+10),(x+26,y+28)], '#4a3a30')
+    line([(x+6,y+28),(x+5,y+10),(x+10,y+3),(x+22,y+3),(x+27,y+10),(x+26,y+28)], INK, 2)
+    poly([(x+10,y+27),(x+9,y+12),(x+13,y+7),(x+19,y+7),(x+23,y+12),(x+22,y+27)], '#5a0f22')
+    poly([(x+12,y+26),(x+12,y+13),(x+16,y+9),(x+20,y+13),(x+20,y+26)], '#c21d3f')
+    poly([(x+14,y+25),(x+14,y+15),(x+16,y+12),(x+18,y+15),(x+18,y+25)], '#3fe0c5')
+    rect(x+15,y+16,x+17,y+22,'#e9fffb')
+    for px, py in [(7,6),(25,8),(4,18),(27,20)]: rect(x+px,y+py,x+px+2,y+py+2,'#8a7a5a')
+
+
+def keep_gate(x, y):
+    # the little home keep the player defends (32x40)
+    poly([(x+2,y+38),(x+30,y+38),(x+31,y+35),(x+1,y+35)], '#00000077')
+    poly([(x+4,y+12),(x+28,y+12),(x+29,y+36),(x+3,y+36)], '#7d7466')
+    line([(x+4,y+12),(x+28,y+12),(x+29,y+36),(x+3,y+36),(x+4,y+12)], INK, 2)
+    for i in range(4): rect(x+4+i*7,y+7,x+8+i*7,y+12,'#7d7466'); line([(x+4+i*7,y+7),(x+8+i*7,y+7)], '#cfc4a8', 1)
+    poly([(x+11,y+36),(x+11,y+24),(x+16,y+19),(x+21,y+24),(x+21,y+36)], '#2a1a12')
+    line([(x+13,y+26),(x+19,y+26)], '#7a5530', 1); line([(x+13,y+30),(x+19,y+30)], '#7a5530', 1)
+    rect(x+6,y+16,x+9,y+20,'#ffd77a'); rect(x+23,y+16,x+26,y+20,'#ffd77a')
+    line([(x+16,y+7),(x+16,y-2)], '#3a2a1c', 2)
+    poly([(x+17,y-2),(x+26,y+1),(x+17,y+4)], '#3fa36b')
+    line([(x+6,y+33),(x+26,y+33)], '#5c5448', 2)
+
+
+def rock_cluster(x, y):
+    poly([(x+3,y+26),(x+29,y+26),(x+30,y+29),(x+2,y+29)], '#00000055')
+    poly([(x+4,y+26),(x+6,y+14),(x+13,y+9),(x+19,y+13),(x+18,y+26)], '#6f6758')
+    poly([(x+15,y+26),(x+17,y+17),(x+24,y+14),(x+29,y+20),(x+28,y+26)], '#5a5348')
+    line([(x+6,y+14),(x+13,y+9),(x+19,y+13)], '#cfc4a8', 1); line([(x+17,y+17),(x+24,y+14)], '#b0a68c', 1)
+    poly([(x+8,y+18),(x+12,y+16),(x+11,y+22)], '#3f6f3a')
+    line([(x+4,y+26),(x+6,y+14),(x+13,y+9),(x+19,y+13),(x+18,y+26)], INK, 1)
+
+
+def mossy_tree(x, y):
+    poly([(x+4,y+28),(x+28,y+28),(x+29,y+31),(x+3,y+31)], '#00000066')
+    rect(x+14,y+18,x+18,y+29,'#4a3220')
+    poly([(x+5,y+19),(x+4,y+10),(x+10,y+3),(x+20,y+2),(x+27,y+8),(x+28,y+18),(x+20,y+22),(x+11,y+22)], '#2f5a2c')
+    poly([(x+8,y+13),(x+12,y+6),(x+20,y+5),(x+24,y+10),(x+18,y+14)], '#4f8a3c')
+    line([(x+10,y+7),(x+18,y+5)], '#9fc46a', 1)
+    rect(x+20,y+15,x+22,y+17,'#d3263f')
+    line([(x+5,y+19),(x+4,y+10),(x+10,y+3),(x+20,y+2),(x+27,y+8),(x+28,y+18),(x+20,y+22),(x+11,y+22),(x+5,y+19)], INK, 1)
+
+
+tower_piercer(144, 44); tower_beacon(192, 44)
+enemy_swarmling(96, 104); enemy_shielded(128, 104); enemy_warlord(192, 104)
+# role icons for the new towers
+rect(96,145,112,159,'#1b110d'); poly([(98,156),(108,147),(111,150),(101,159)], '#d3263f'); line([(99,155),(109,148)], '#ff9aa8', 1)
+rect(120,145,136,159,'#1b110d'); poly([(128,146),(134,152),(128,158),(122,152)], '#2fd1b4'); rect(127,151,129,153,'#ffffff')
+# vertical road pieces are the horizontal family rotated; corners are one authored piece rotated
+for i in range(4):
+    tile = img.crop((xy(128 + i*32), 0, xy(160 + i*32), xy(32))).rotate(90)
+    img.paste(tile, (xy(i*32), xy(176)))
+corner_tile(128, 176)
+base = img.crop((xy(128), xy(176), xy(160), xy(208)))
+for k in range(1, 4):
+    img.paste(base.rotate(90 * k), (xy(128 + k*32), xy(176)))
+spawn_rift(0, 208); keep_gate(32, 208); rock_cluster(80, 208); mossy_tree(112, 208)
 
 out = Path('assets/art-handdrawn')
 out.mkdir(parents=True, exist_ok=True)
