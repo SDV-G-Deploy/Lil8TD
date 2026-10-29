@@ -295,7 +295,7 @@ function towerAttacks(m, b, content) {
     const damage = Math.floor(lvl.damage * (100 + bonus) / 100);
     hits.push(...makeHits(t, def, target, lvl, damage, b, content));
     t.cooldown = lvl.cooldownTicks;
-    m.events.push({ tick: m.tick, slot: b.slot, type: 'tower.fired', towerId: t.id, towerType: t.typeId, targetId: target.id, buffed: bonus > 0 });
+    m.events.push({ tick: m.tick, slot: b.slot, type: 'tower.fired', towerId: t.id, towerType: t.typeId, targetId: target.id, targetProgress: target.progress, buffed: bonus > 0 });
   }
   hits.sort((a, c) => a.towerNum - c.towerNum || a.targetNum - c.targetNum).forEach(h => applyHit(m, b, h));
 }
@@ -341,7 +341,7 @@ function applyHit(m, b, h) {
   let dmg = h.damage;
   if (e.shield > 0) {
     const shieldDmg = dmg * h.shieldMult;
-    if (shieldDmg >= e.shield) { dmg = Math.floor((shieldDmg - e.shield) / h.shieldMult); e.shield = 0; m.events.push({ tick: m.tick, slot: b.slot, type: 'enemy.shieldBroken', enemyId: e.id }); }
+    if (shieldDmg >= e.shield) { dmg = Math.floor((shieldDmg - e.shield) / h.shieldMult); e.shield = 0; m.events.push({ tick: m.tick, slot: b.slot, type: 'enemy.shieldBroken', enemyId: e.id, progress: e.progress }); }
     else { e.shield -= shieldDmg; dmg = 0; }
   }
   e.hp -= dmg;
