@@ -2,32 +2,121 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Lil8TD Local Slice</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Lil8TD — Tiny Tower Duel</title>
+  <meta name="description" content="Lil8TD: an old-school pixel tower defense duel. Build, upgrade, and send raiders at the AI until one keep falls." />
+  <meta name="theme-color" content="#1a120e" />
   <link rel="stylesheet" href="./src/render/style.css" />
 </head>
 <body>
-  <main id="app">
-    <section class="topbar">
-      <div><strong>Lil8TD</strong> <span class="muted">Local Playable Foundation</span></div>
-      <div id="hud"></div>
-    </section>
+  <main id="app" aria-label="Lil8TD">
+    <header class="topbar">
+      <div class="brand"><strong>Lil8TD</strong> <span class="muted" id="modeLabel">Tiny Tower Duel</span></div>
+      <div id="hud" class="hud" aria-live="polite">
+        <div class="chip wave"><span class="k">Wave</span> <b id="hudWave">0/10</b> <span id="hudTemplate" class="muted"></span></div>
+        <div class="chip timer"><span class="k">Next</span> <b id="hudNext">--</b></div>
+        <div class="chip lives"><span class="k">&hearts;</span> <b id="hudLives">20</b></div>
+        <div class="chip gold"><span class="k">&#9670;</span> <b id="hudGold">0</b></div>
+        <div class="chip opp" id="hudOppWrap"><span class="k">AI &hearts;</span> <b id="hudOpp">20</b></div>
+      </div>
+      <div class="controls">
+        <button id="pauseBtn" class="icon" title="Pause (Space)" aria-label="Pause">&#10074;&#10074;</button>
+        <button id="speedBtn" class="icon" title="Game speed (F)" aria-label="Game speed">1x</button>
+        <button id="muteBtn" class="icon" title="Sound (M)" aria-label="Toggle sound">&#9835;</button>
+        <button id="menuBtn" class="icon" title="Menu (Esc)" aria-label="Menu">&#9776;</button>
+      </div>
+    </header>
     <section class="layout">
-      <canvas id="game" width="960" height="640" aria-label="Lil8TD game board"></canvas>
+      <div class="boardCol">
+        <div class="boardWrap">
+          <canvas id="game" width="960" height="640" aria-label="Your board"></canvas>
+          <div id="banner" class="banner" hidden></div>
+          <div id="alert" class="alert" hidden></div>
+          <div id="pausedTag" class="pausedTag" hidden>Paused</div>
+        </div>
+        <div class="threats">
+          <div id="nextWave" class="nextWave"></div>
+          <div id="incomingList" class="incomingList"></div>
+        </div>
+      </div>
       <aside class="panel">
-        <h2>Build</h2>
-        <div id="towerButtons"></div>
-        <h2>Selected</h2>
-        <div id="selectedPanel" class="muted">Click a tower or a buildable tile.</div>
-        <h2>Controls</h2>
-        <button id="pauseBtn">Pause</button>
-        <button id="stepBtn">Step 1 tick</button>
-        <button id="botBtn">Bot: off</button>
-        <button id="restartBtn">Restart</button>
-        <p class="help">Click a tower type, then a grass tile. Path tiles are blocked. Towers attack automatically at a fixed 20 Hz sim tick.</p>
+        <section>
+          <h2>Build <span class="hint">1&ndash;5</span></h2>
+          <div id="towerButtons" class="towerGrid"></div>
+        </section>
+        <section>
+          <h2>Selected <span class="hint">U upgrade &middot; S sell</span></h2>
+          <div id="selectedPanel" class="selected muted">Pick a tower, then tap a grass tile.</div>
+        </section>
+        <section id="pressureSection">
+          <h2>Send raiders <span class="hint">Z X C</span></h2>
+          <div id="pressureButtons" class="pressureGrid"></div>
+        </section>
+        <section id="oppSection" class="oppBox">
+          <h2>Opponent <span id="oppName" class="hint"></span></h2>
+          <canvas id="opp" width="480" height="320" aria-label="Opponent board"></canvas>
+          <div id="oppStats" class="oppStats"></div>
+        </section>
       </aside>
     </section>
   </main>
+
+  <div id="screen-title" class="screen" role="dialog" aria-modal="true" aria-labelledby="titleLogo">
+    <div class="card titleCard">
+      <h1 id="titleLogo" class="logo"><span>LIL</span><span class="eight">8</span><span>TD</span></h1>
+      <p class="tagline">Tiny towers. Big raids. Outlast the AI.</p>
+      <div class="diffPick" role="radiogroup" aria-label="AI difficulty">
+        <button data-diff="easy" role="radio">Easy</button>
+        <button data-diff="normal" role="radio">Normal</button>
+        <button data-diff="hard" role="radio">Hard</button>
+      </div>
+      <p id="diffNote" class="diffNote"></p>
+      <div class="menuButtons">
+        <button id="playBtn" class="primary">&#9876; Battle vs AI</button>
+        <button id="soloBtn">Practice (no opponent)</button>
+        <button id="howBtn">How to play</button>
+      </div>
+      <p class="fine">Mirrored duel &middot; 10 waves &middot; deterministic 20&nbsp;Hz sim &middot; <span id="versionTag"></span></p>
+    </div>
+  </div>
+
+  <div id="screen-howto" class="screen" role="dialog" aria-modal="true" aria-labelledby="howTitle" hidden>
+    <div class="card howCard">
+      <h1 id="howTitle">How to play</h1>
+      <div class="howGrid">
+        <div>
+          <h3>Goal</h3>
+          <p>You and the AI each defend an identical board against the same 10 waves. Every raider that reaches your keep costs lives. <b>When a keep hits 0 lives it collapses and the other side wins.</b> If both survive, more lives wins.</p>
+          <h3>Build &amp; upgrade</h3>
+          <p>Pick a tower (or press 1&ndash;5), then tap a grass tile. Tap a tower to see its range, <b>upgrade</b> it (up to level 3) or <b>sell</b> it for 65%. Kills and wave starts pay credits.</p>
+          <h3>Send raiders</h3>
+          <p>Spend credits to send an extra pack to the AI's board. It arrives after a short, visible windup &mdash; time it to land on top of their next wave. The AI does the same to you: watch the red <b>Incoming</b> warnings and raiders with a crimson ring.</p>
+          <h3>Controls</h3>
+          <p class="keys"><kbd>1</kbd>&ndash;<kbd>5</kbd> towers &middot; <kbd>U</kbd> upgrade &middot; <kbd>S</kbd> sell &middot; <kbd>Z</kbd><kbd>X</kbd><kbd>C</kbd> send &middot; <kbd>Space</kbd> pause &middot; <kbd>F</kbd> speed &middot; <kbd>M</kbd> sound &middot; <kbd>Esc</kbd> cancel/menu</p>
+        </div>
+        <div>
+          <h3>Towers</h3>
+          <ul id="howTowers" class="roster"></ul>
+          <h3>Raiders</h3>
+          <ul id="howEnemies" class="roster"></ul>
+        </div>
+      </div>
+      <div class="menuButtons row"><button id="howBack" class="primary">Got it</button></div>
+    </div>
+  </div>
+
+  <div id="screen-result" class="screen" role="dialog" aria-modal="true" aria-labelledby="resultTitle" hidden>
+    <div class="card resultCard">
+      <h1 id="resultTitle" class="resultTitle">Victory</h1>
+      <p id="resultReason" class="tagline"></p>
+      <table id="resultStats" class="stats"></table>
+      <div class="menuButtons row">
+        <button id="rematchBtn" class="primary">Rematch</button>
+        <button id="resultMenuBtn">Main menu</button>
+      </div>
+    </div>
+  </div>
+
   <script type="module" src="./src/game/main.js"></script>
 </body>
 </html>

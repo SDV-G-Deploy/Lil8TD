@@ -1,819 +1,287 @@
-import { canPlaceTower, tileKind } from '../sim/sim.js';
+// Lil8TD board renderer (Sprite Set V2 direction: Cozy RTS Miniatures + Dandadan Accents).
+// Pure presentation: reads match state, never mutates it. Terrain is baked once per canvas
+// size from the hand-drawn atlas; towers/enemies are y-sorted sprites; FX are client-side.
+import { canPlaceTower, auraBonusPercent, enemySpeed } from '../sim/sim.js';
+import { pointAtProgress } from '../sim/map.js';
 
-const PALETTE = {
-  void: '#050b12',
-  grassDeep: '#102417',
-  grassDark: '#18361f',
-  grass: '#244d2a',
-  grassWarm: '#3f6632',
-  grassGold: '#657542',
-  moss: '#718743',
-  flower: '#d6ac67',
-  stone: '#8a7d60',
-  slate: '#566052',
-  pathRim: '#3f2a1b',
-  pathDark: '#654322',
-  path: '#966634',
-  pathLight: '#c58c49',
-  pathDust: '#dfb46c',
-  seam: 'rgba(240, 219, 156, .11)',
-  grid: 'rgba(242, 222, 162, .10)',
-  valid: 'rgba(116, 224, 105, .28)',
-  invalid: 'rgba(218, 73, 65, .30)',
-  ink: '#09101a',
-  umber: '#2a1c16',
-  cream: '#f4e7c0',
-  parchment: '#d8bf83',
-  bronze: '#b47b38',
-  iron: '#39455a',
-  shadow: 'rgba(0, 0, 0, .36)',
-  warmShadow: 'rgba(31, 18, 10, .30)',
-  glint: 'rgba(252, 230, 169, .30)',
-  arrow: '#e3c85d',
-  burst: '#ef8d42',
-  frost: '#8edff0',
-  grunt: '#d0b46d',
-  runner: '#db5d5c',
-  brute: '#8e6bd7',
-  hpBack: '#2b1519',
-  hp: '#71db70'
+const ATLAS_SCALE = 4;
+const SPR = (x, y, w, h) => ({ x: x * ATLAS_SCALE, y: y * ATLAS_SCALE, w: w * ATLAS_SCALE, h: h * ATLAS_SCALE });
+export const SPRITES = {
+  grass0: SPR(0, 0, 32, 32), grass1: SPR(32, 0, 32, 32), grass2: SPR(64, 0, 32, 32), grass3: SPR(96, 0, 32, 32),
+  pathH0: SPR(128, 0, 32, 32), pathH1: SPR(160, 0, 32, 32), pathH2: SPR(192, 0, 32, 32), pathH3: SPR(224, 0, 32, 32),
+  pathV0: SPR(0, 176, 32, 32), pathV1: SPR(32, 176, 32, 32), pathV2: SPR(64, 176, 32, 32), pathV3: SPR(96, 176, 32, 32),
+  cornerWS: SPR(128, 176, 32, 32), cornerSE: SPR(160, 176, 32, 32), cornerEN: SPR(192, 176, 32, 32), cornerNW: SPR(224, 176, 32, 32),
+  arrow: SPR(0, 32, 48, 72), burst: SPR(48, 32, 48, 72), frost: SPR(96, 32, 48, 72), piercer: SPR(144, 32, 48, 72), beacon: SPR(192, 32, 48, 72),
+  grunt: SPR(0, 104, 32, 32), runner: SPR(32, 104, 32, 32), brute: SPR(64, 104, 32, 32), swarmling: SPR(96, 104, 32, 32), shielded: SPR(128, 104, 32, 32), warlord: SPR(192, 104, 48, 40),
+  iconCorner: SPR(0, 144, 16, 16), icon_arrow: SPR(24, 144, 16, 16), icon_burst: SPR(48, 144, 16, 16), icon_frost: SPR(72, 144, 16, 16), icon_piercer: SPR(96, 144, 16, 16), icon_beacon: SPR(120, 144, 16, 16),
+  rift: SPR(0, 208, 32, 32), keep: SPR(32, 204, 32, 44), rock: SPR(80, 208, 32, 32), tree: SPR(112, 208, 32, 32)
 };
 
-const TOWER_META = {
-  arrow: { color: PALETTE.arrow, trim: '#fff1a1', roof: '#876735', stone: '#5c5960' },
-  burst: { color: PALETTE.burst, trim: '#ffd17b', roof: '#7b321f', stone: '#66554a' },
-  frost: { color: PALETTE.frost, trim: '#dcfbff', roof: '#2d6e86', stone: '#526774' }
-};
+export const TOWER_COLORS = { arrow: '#f0cf54', burst: '#ef8d42', frost: '#8edff0', piercer: '#ff5a72', beacon: '#3fe0c5' };
+export const ENEMY_COLORS = { grunt: '#d5b96e', runner: '#de5753', brute: '#8e6bd7', swarmling: '#8fbf4a', shielded: '#9aa9c4', warlord: '#5f7a48' };
+const ENEMY_SIZE = { grunt: .62, runner: .58, brute: .80, swarmling: .44, shielded: .66, warlord: 1.3 };
+const CRIMSON = '#e0294a';
+const TEAL = '#3fe0c5';
 
-const ENEMY_META = {
-  grunt: { color: PALETTE.grunt, shade: '#7a5a32', eye: '#342418', size: .44 },
-  runner: { color: PALETTE.runner, shade: '#7c2530', eye: '#ffe6d1', size: .37 },
-  brute: { color: PALETTE.brute, shade: '#46306f', eye: '#1d1132', size: .55 }
-};
-
-const ART_SCALE = 4;
-const ART_ATLAS = makeArtAtlas();
-const ART_SPRITES = {
-  grass0: sprite(0, 0, 32, 32), grass1: sprite(32, 0, 32, 32), grass2: sprite(64, 0, 32, 32), grass3: sprite(96, 0, 32, 32),
-  path0: sprite(128, 0, 32, 32), path1: sprite(160, 0, 32, 32), path2: sprite(192, 0, 32, 32), path3: sprite(224, 0, 32, 32),
-  towerArrow: sprite(0, 32, 48, 72), towerBurst: sprite(48, 32, 48, 72), towerFrost: sprite(96, 32, 48, 72),
-  enemyGrunt: sprite(0, 104, 32, 32), enemyRunner: sprite(32, 104, 32, 32), enemyBrute: sprite(64, 104, 32, 32),
-  uiCorner: sprite(0, 144, 16, 16)
-};
-
-export function makeRenderer(canvas, content) {
-  const ctx = canvas.getContext('2d');
-  return {
-    get tile() { return boardMetrics(canvas, content).tile; },
-    draw(state, ui, alpha = 0) { draw(ctx, canvas, content, state, ui, boardMetrics(canvas, content), alpha); },
-    tileAt(evt) {
-      const m = boardMetrics(canvas, content);
-      const r = canvas.getBoundingClientRect();
-      const style = getComputedStyle(canvas);
-      const borderLeft = parseFloat(style.borderLeftWidth) || 0;
-      const borderTop = parseFloat(style.borderTopWidth) || 0;
-      const cssX = evt.clientX - r.left - borderLeft;
-      const cssY = evt.clientY - r.top - borderTop;
-      const scaleX = canvas.width / canvas.clientWidth;
-      const scaleY = canvas.height / canvas.clientHeight;
-      const x = Math.floor((cssX * scaleX) / m.cellW);
-      const y = Math.floor((cssY * scaleY) / m.cellH);
-      return {
-        x: clamp(x, 0, content.map.buildRules.gridWidth - 1),
-        y: clamp(y, 0, content.map.buildRules.gridHeight - 1)
-      };
-    }
-  };
+let atlas = null;
+const atlasListeners = new Set();
+export function loadAtlas(src = './assets/art-handdrawn/lil8td-sprite-set-v2.png') {
+  if (atlas || typeof Image === 'undefined') return atlas;
+  atlas = new Image();
+  atlas.onload = () => atlasListeners.forEach(fn => fn());
+  atlas.src = src;
+  return atlas;
 }
+function atlasReady() { return atlas && atlas.complete && atlas.naturalWidth > 0; }
 
-function boardMetrics(canvas, content) {
-  const gridW = content.map.buildRules.gridWidth;
-  const gridH = content.map.buildRules.gridHeight;
-  const cellW = canvas.width / gridW;
-  const cellH = canvas.height / gridH;
-  return { gridW, gridH, cellW, cellH, tile: Math.min(cellW, cellH) };
-}
-
-function draw(ctx, canvas, content, state, ui, m, alpha = 0) {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.imageSmoothingEnabled = false;
-  ctx.fillStyle = PALETTE.void;
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  drawBoardUnderlay(ctx, canvas, m);
-
-  drawTiles(ctx, content, m);
-  drawMacroTerrainAccents(ctx, content, m);
-  drawPathOrnaments(ctx, content, m);
-  drawBuildPins(ctx, content, state, m);
-  drawEffects(ctx, content, state, m, alpha);
-  drawEnemies(ctx, content, state, m, alpha);
-  drawTowers(ctx, content, state, ui, m);
-  drawHover(ctx, content, state, ui, m);
-  drawMapFrame(ctx, canvas, m);
-
-  if (state.result) drawResult(ctx, canvas, state.result.outcome);
-}
-
-function drawBoardUnderlay(ctx, canvas, m) {
-  ctx.fillStyle = '#07100e';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  // Broad quiet fields make the map feel composed before individual tiles add material.
-  ctx.fillStyle = 'rgba(72, 91, 48, .16)';
-  pixelDiamond(ctx, canvas.width * .18, canvas.height * .22, m.tile * 2.2, 'rgba(72, 91, 48, .16)');
-  pixelDiamond(ctx, canvas.width * .82, canvas.height * .78, m.tile * 2.5, 'rgba(88, 72, 41, .12)');
-  ctx.fillStyle = 'rgba(0,0,0,.18)';
-  ctx.fillRect(0, 0, canvas.width, 22);
-  ctx.fillRect(0, canvas.height - 24, canvas.width, 24);
-}
-
-function drawTiles(ctx, content, m) {
-  for (let y = 0; y < m.gridH; y++) {
-    for (let x = 0; x < m.gridW; x++) {
-      const px = x * m.cellW, py = y * m.cellH;
-      if (tileKind(x, y) === 'path') {
-        if (!drawSprite(ctx, `path${hash(x, y) % 4}`, px, py, m.cellW, m.cellH)) drawPathTile(ctx, px, py, m.cellW, m.cellH, x, y, m);
-      } else {
-        const drewGrass = drawSprite(ctx, `grass${grassSpriteIndex(x, y)}`, px, py, m.cellW, m.cellH);
-        if (!drewGrass) drawGrassTile(ctx, px, py, m.cellW, m.cellH, x, y, m);
-        drawGrassVariationOverlay(ctx, px, py, m.cellW, m.cellH, x, y, m);
-      }
-      drawTileGrid(ctx, px, py, m.cellW, m.cellH, x, y);
-    }
-  }
-}
-
-function grassSpriteIndex(x, y) {
-  // Sprite Set V2: cluster into grass families A/B/C instead of per-tile confetti.
-  const cluster = Math.floor(x / 3) * 17 + Math.floor(y / 2) * 29;
-  const roll = Math.abs(cluster + hash(Math.floor(x / 2), Math.floor(y / 2))) % 10;
-  if (roll < 5) return 0;      // A: base moss field
-  if (roll < 7) return 1;      // B: warmer dry moss/earth
-  if (roll < 9) return 2;      // C: cooler shaded moss
-  return 3;                    // quiet bridge variant
-}
-
-function drawGrassVariationOverlay(ctx, x, y, w, h, gx, gy, m) {
-  const n = hash(gx + 41, gy + 73);
-  const family = (Math.floor(gx / 3) + Math.floor(gy / 2) * 3 + n) % 11;
-
-  // Large translucent patches cross tile boundaries, which hides the carpet grid without adding noise.
-  if (family === 0 || family === 4 || family === 9) {
-    const color = family === 0 ? 'rgba(101, 117, 62, .18)' : family === 4 ? 'rgba(20, 47, 34, .25)' : 'rgba(112, 88, 48, .12)';
-    pixelDiamond(ctx, x + w * ((n & 1) ? .22 : .78), y + h * ((n & 2) ? .28 : .74), m.tile * (family === 0 ? .38 : .29), color);
-  }
-  if (family === 2) {
-    ctx.fillStyle = 'rgba(111, 126, 67, .18)';
-    ctx.fillRect(Math.floor(x + w * .12), Math.floor(y + h * .18), Math.floor(w * .46), Math.max(2, Math.floor(m.tile * .035)));
-    ctx.fillRect(Math.floor(x + w * .34), Math.floor(y + h * .32), Math.floor(w * .36), Math.max(2, Math.floor(m.tile * .035)));
-  }
-  if (family === 6) {
-    ctx.fillStyle = 'rgba(121, 95, 57, .18)';
-    ctx.fillRect(Math.floor(x + w * .57), Math.floor(y + h * .58), Math.floor(w * .24), Math.max(3, Math.floor(m.tile * .06)));
-    ctx.fillStyle = 'rgba(231, 199, 122, .16)';
-    ctx.fillRect(Math.floor(x + w * .60), Math.floor(y + h * .56), Math.floor(w * .13), 2);
-  }
-  // Sparse landmark clumps: readable on phone, rare enough not to compete with path/build pins.
-  if ((n % 19) === 5) drawGrassClump(ctx, x + w * .70, y + h * .28, m.tile, '#758747');
-  if ((n % 29) === 9) drawGrassClump(ctx, x + w * .24, y + h * .68, m.tile * .85, '#4f7138');
-  if ((n % 41) === 11) drawTinyMushroom(ctx, x + w * .38, y + h * .72, m.tile);
-}
-
-function drawGrassClump(ctx, x, y, s, color) {
-  ctx.fillStyle = 'rgba(14, 26, 13, .24)';
-  ctx.fillRect(Math.floor(x - s * .10), Math.floor(y + s * .08), Math.floor(s * .34), Math.max(2, Math.floor(s * .04)));
-  ctx.fillStyle = color;
-  ctx.fillRect(Math.floor(x), Math.floor(y), Math.max(2, Math.floor(s * .05)), Math.floor(s * .20));
-  ctx.fillRect(Math.floor(x + s * .09), Math.floor(y + s * .04), Math.max(2, Math.floor(s * .05)), Math.floor(s * .16));
-  ctx.fillRect(Math.floor(x - s * .08), Math.floor(y + s * .07), Math.max(2, Math.floor(s * .05)), Math.floor(s * .13));
-  ctx.fillStyle = 'rgba(238, 205, 125, .22)';
-  ctx.fillRect(Math.floor(x + s * .03), Math.floor(y - s * .02), Math.max(2, Math.floor(s * .12)), 2);
-}
-
-function drawTinyMushroom(ctx, x, y, s) {
-  ctx.fillStyle = 'rgba(16, 10, 7, .22)';
-  ctx.fillRect(Math.floor(x - s * .06), Math.floor(y + s * .10), Math.floor(s * .22), 2);
-  ctx.fillStyle = 'rgba(215, 189, 131, .62)';
-  ctx.fillRect(Math.floor(x), Math.floor(y), Math.max(2, Math.floor(s * .045)), Math.floor(s * .12));
-  ctx.fillStyle = 'rgba(185, 90, 66, .50)';
-  ctx.fillRect(Math.floor(x - s * .06), Math.floor(y - s * .04), Math.floor(s * .18), Math.max(2, Math.floor(s * .055)));
-}
-
-function drawMacroTerrainAccents(ctx, content, m) {
-  const accents = [
-    { x: 1.8, y: .78, r: .58, c: 'rgba(118, 133, 69, .13)' },
-    { x: 5.6, y: .92, r: .42, c: 'rgba(42, 78, 42, .17)' },
-    { x: 8.25, y: 4.15, r: .52, c: 'rgba(121, 93, 52, .11)' },
-    { x: 2.55, y: 4.42, r: .38, c: 'rgba(93, 114, 58, .15)' },
-    { x: 7.2, y: 1.42, r: .34, c: 'rgba(19, 50, 39, .14)' }
-  ];
-  for (const a of accents) {
-    const tx = Math.floor(a.x), ty = Math.floor(a.y);
-    if (tx < 0 || ty < 0 || tx >= m.gridW || ty >= m.gridH || tileKind(tx, ty) === 'path') continue;
-    pixelDiamond(ctx, a.x * m.cellW, a.y * m.cellH, m.tile * a.r, a.c);
-  }
-}
-
-function drawGrassTile(ctx, x, y, w, h, gx, gy, m) {
-  const n = hash(gx, gy);
-  const family = (gx * 3 + gy * 5 + n) % 11;
-  ctx.fillStyle = family < 2 ? PALETTE.grassDeep : (gx + gy) % 2 === 0 ? '#18331f' : '#162e1c';
-  ctx.fillRect(x, y, w, h);
-
-  ctx.fillStyle = n % 5 === 0 ? '#23482a' : n % 4 === 0 ? '#1f3e25' : '#214629';
-  ctx.fillRect(x + 4, y + 4, w - 8, h - 8);
-
-  ctx.fillStyle = PALETTE.warmShadow;
-  ctx.fillRect(x + 5, y + h - 12, w - 10, 7);
-  ctx.fillStyle = 'rgba(239, 212, 141, .075)';
-  ctx.fillRect(x + 7, y + 7, w - 14, 4);
-
-  const step = Math.max(3, Math.floor(m.tile / 22));
-  const flecks = 1 + (n % 3);
-  for (let i = 0; i < flecks; i++) {
-    const px = x + 10 + ((n + i * 29 + gx * 17) % Math.max(12, Math.floor(w - 22)));
-    const py = y + 12 + ((n * 3 + i * 19 + gy * 23) % Math.max(12, Math.floor(h - 26)));
-    const kind = (n + i * 2) % 12;
-    if (kind === 0) {
-      ctx.fillStyle = PALETTE.flower;
-      ctx.fillRect(Math.floor(px), Math.floor(py), step * 2, step);
-    } else if (kind < 4) {
-      ctx.fillStyle = kind === 1 ? PALETTE.moss : PALETTE.grassGold;
-      ctx.fillRect(Math.floor(px), Math.floor(py), step * 3, step);
-      if (kind === 1) ctx.fillRect(Math.floor(px + step), Math.floor(py - step), step, step * 2);
-    } else {
-      ctx.fillStyle = kind === 4 ? '#2e5330' : '#425f34';
-      ctx.fillRect(Math.floor(px), Math.floor(py), step, step);
-    }
-  }
-
-  if ((n & 7) === 5) {
-    ctx.fillStyle = 'rgba(174, 162, 118, .34)';
-    ctx.fillRect(x + w * .62, y + h * .61, m.tile * .13, m.tile * .045);
-    ctx.fillStyle = 'rgba(44, 37, 30, .30)';
-    ctx.fillRect(x + w * .62, y + h * .66, m.tile * .13, m.tile * .025);
-  }
-  if ((n % 13) === 3) {
-    ctx.fillStyle = 'rgba(95, 112, 63, .26)';
-    pixelDiamond(ctx, x + w * .26, y + h * .70, m.tile * .13, 'rgba(95, 112, 63, .26)');
-  }
-}
-
-function drawPathTile(ctx, x, y, w, h, gx, gy, m) {
-  const n = hash(gx, gy);
-  ctx.fillStyle = PALETTE.pathRim;
-  ctx.fillRect(x, y, w, h);
-
-  ctx.fillStyle = '#2b1b13';
-  ctx.fillRect(x + 2, y + 6, w - 4, 10);
-  ctx.fillRect(x + 2, y + h - 16, w - 4, 10);
-  ctx.fillStyle = PALETTE.pathDark;
-  ctx.fillRect(x + 2, y + 12, w - 4, h - 24);
-  ctx.fillStyle = gx % 2 === 0 ? '#916033' : '#87572e';
-  ctx.fillRect(x + 8, y + 16, w - 16, h - 32);
-
-  // A soft diagonal value rhythm keeps the road handcrafted without losing the lane read.
-  ctx.fillStyle = 'rgba(80, 47, 24, .22)';
-  ctx.fillRect(x + 12 + (gx % 3) * 6, y + 20, w * .18, h - 40);
-  ctx.fillStyle = 'rgba(238, 196, 118, .12)';
-  ctx.fillRect(x + w * .48, y + 18, w * .16, h - 36);
-
-  // crafted worn center, like a compact old RTS road with packed dust and plank/stone breaks
-  ctx.fillStyle = 'rgba(227, 183, 104, .30)';
-  ctx.fillRect(x + 13, y + h * .43, w - 26, 4);
-  ctx.fillStyle = 'rgba(55, 32, 19, .30)';
-  ctx.fillRect(x + 10, y + h - 25, w - 20, 6);
-  ctx.fillStyle = PALETTE.pathLight;
-  ctx.fillRect(x + ((gx % 2) ? w * .56 : w * .18), y + 25, w * .20, 5);
-  ctx.fillRect(x + ((gx % 3) ? w * .24 : w * .62), y + h - 34, w * .18, 4);
-
-  ctx.fillStyle = 'rgba(244, 225, 164, .32)';
-  for (let i = 0; i < 2; i++) {
-    const px = x + 18 + ((n + i * 31) % Math.max(12, Math.floor(w - 38)));
-    const py = y + 22 + ((n * 2 + i * 17) % Math.max(12, Math.floor(h - 44)));
-    ctx.fillRect(Math.floor(px), Math.floor(py), Math.max(3, m.tile * .045), Math.max(2, m.tile * .025));
-  }
-
-  ctx.fillStyle = 'rgba(31, 21, 15, .32)';
-  ctx.fillRect(x + 2, y + 9, w - 4, 6);
-  ctx.fillRect(x + 2, y + h - 15, w - 4, 6);
-
-  // little bordering stones make the road feel built, not just colored.
-  for (let sx = x + 10 + (gx % 2) * 10; sx < x + w - 10; sx += 28) {
-    ctx.fillStyle = ((Math.floor(sx) + gx) % 3) ? '#78694d' : '#a08b61';
-    ctx.fillRect(Math.floor(sx), Math.floor(y + 7), 12, 5);
-    ctx.fillRect(Math.floor(sx + 9), Math.floor(y + h - 12), 13, 5);
-    ctx.fillStyle = 'rgba(255,238,178,.20)';
-    ctx.fillRect(Math.floor(sx) + 2, Math.floor(y + 7), 6, 1);
-  }
-}
-
-function drawTileGrid(ctx, x, y, w, h, gx, gy) {
-  // Keep only a soft hand-drawn seam; the atlas now carries the material read.
-  ctx.strokeStyle = tileKind(gx, gy) === 'path' ? 'rgba(255, 231, 173, .055)' : 'rgba(242, 222, 162, .045)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(Math.floor(x) + 1, Math.floor(y) + 1, Math.floor(w) - 2, Math.floor(h) - 2);
-  ctx.strokeStyle = 'rgba(0, 0, 0, .09)';
-  ctx.lineWidth = 1;
-  ctx.strokeRect(Math.floor(x) + 4, Math.floor(y) + 4, Math.floor(w) - 8, Math.floor(h) - 8);
-}
-
-function drawPathOrnaments(ctx, content, m) {
-  const cy = 2.5 * m.cellH;
-  for (let x = .85; x < m.gridW; x += 1.7) {
-    const px = x * m.cellW;
-    ctx.fillStyle = 'rgba(67, 39, 22, .22)';
-    ctx.fillRect(px - 14, cy - 2, 29, 4);
-    pixelDiamond(ctx, px, cy - 1, 5, 'rgba(223, 180, 108, .45)');
-    pixelDiamond(ctx, px, cy - 1, 2, 'rgba(116, 71, 35, .75)');
-    ctx.fillStyle = 'rgba(244, 220, 154, .12)';
-    ctx.fillRect(px + 7, cy - 4, 8, 2);
-  }
-
-  // A few low-priority toy-board roadside flags add warmth without stealing lane priority.
-  for (let x = 1.45; x < m.gridW - .5; x += 3.3) {
-    const px = x * m.cellW + ((Math.floor(x * 10) % 2) ? 5 : -3);
-    const top = cy - m.cellH * .47;
-    ctx.fillStyle = 'rgba(19, 12, 8, .34)';
-    ctx.fillRect(px - 2, top + 16, 13, 3);
-    ctx.fillStyle = '#6b5632';
-    ctx.fillRect(px, top, 3, 19);
-    ctx.fillStyle = 'rgba(213, 163, 81, .54)';
-    ctx.fillRect(px + 3, top + 2, 10, 7);
-    ctx.fillStyle = 'rgba(255, 231, 166, .22)';
-    ctx.fillRect(px + 5, top + 3, 4, 1);
-  }
-
-  // entrance / keep markers: decorative but small enough not to compete with enemies.
-  drawGateMarker(ctx, 18, cy, 'start');
-  drawGateMarker(ctx, m.gridW * m.cellW - 18, cy, 'end');
-}
-
-function drawGateMarker(ctx, x, y, mode) {
-  const banner = mode === 'start' ? '#6fcf79' : '#d45f58';
-  ctx.fillStyle = 'rgba(0,0,0,.28)';
-  ctx.fillRect(x - 11, y + 21, 22, 5);
-  ctx.fillStyle = '#443725';
-  ctx.fillRect(x - 4, y - 24, 8, 48);
-  ctx.fillStyle = '#8a7449';
-  ctx.fillRect(x - 8, y - 28, 16, 8);
-  ctx.fillStyle = banner;
-  ctx.fillRect(mode === 'start' ? x + 4 : x - 22, y - 22, 18, 24);
-  ctx.fillStyle = 'rgba(255,255,255,.24)';
-  ctx.fillRect(mode === 'start' ? x + 7 : x - 19, y - 19, 4, 18);
-}
-
-function drawBuildPins(ctx, content, state, m) {
-  const occupied = new Set(state.towers.map(t => `${t.tileX},${t.tileY}`));
-  for (let y = 0; y < m.gridH; y++) for (let x = 0; x < m.gridW; x++) {
-    if (tileKind(x, y) === 'path' || occupied.has(`${x},${y}`)) continue;
-    const cx = (x + .5) * m.cellW, cy = (y + .5) * m.cellH;
-    ctx.fillStyle = 'rgba(18, 27, 15, .20)';
-    ctx.fillRect(cx - 9, cy + 7, 18, 3);
-    ctx.fillStyle = 'rgba(218, 193, 126, .15)';
-    ctx.fillRect(cx - 6, cy - 1, 12, 2);
-    ctx.fillRect(cx - 1, cy - 6, 2, 12);
-    if ((hash(x, y) % 5) === 0) {
-      ctx.fillStyle = 'rgba(213, 174, 102, .13)';
-      ctx.fillRect(cx + 8, cy - 9, 5, 5);
-    }
-  }
-}
-
-function drawTowers(ctx, content, state, ui, m) {
-  for (const t of state.towers) {
-    const def = content.towers[t.typeId];
-    const lvl = def.levels[t.level - 1];
-    const meta = TOWER_META[t.typeId] ?? TOWER_META.arrow;
-    const x = (t.tileX + .5) * m.cellW, y = (t.tileY + .5) * m.cellH;
-    const s = Math.min(m.cellW, m.cellH);
-
-    if (ui.selectedTowerId === t.id) drawRange(ctx, x, y, lvl.rangeUnits / 1000 * ((m.cellW + m.cellH) / 2), meta);
-    const spriteName = t.typeId === 'arrow' ? 'towerArrow' : t.typeId === 'burst' ? 'towerBurst' : 'towerFrost';
-    const drewAsset = drawSprite(ctx, spriteName, x - s * .58, y - s * .82, s * 1.16, s * 1.42);
-    if (!drewAsset) {
-      drawTowerBase(ctx, x, y, s, meta, t.level);
-      if (t.typeId === 'arrow') drawArrowTower(ctx, x, y, s, meta);
-      else if (t.typeId === 'burst') drawBurstTower(ctx, x, y, s, meta);
-      else drawFrostTower(ctx, x, y, s, meta);
-    }
-    drawTowerBadge(ctx, x, y, s, t.level, meta);
-  }
-}
-
-function drawRange(ctx, x, y, r, meta) {
-  ctx.strokeStyle = 'rgba(244, 231, 191, .30)';
-  ctx.lineWidth = 3;
-  ctx.setLineDash([8, 6]);
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.stroke();
-  ctx.setLineDash([]);
-  ctx.strokeStyle = meta.color;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.arc(x, y, r - 5, 0, Math.PI * 2);
-  ctx.stroke();
-}
-
-function drawTowerBase(ctx, x, y, s, meta) {
-  ctx.fillStyle = PALETTE.shadow;
-  ctx.fillRect(x - s * .36, y + s * .30, s * .72, 8);
-  ctx.fillStyle = '#1d1512';
-  ctx.fillRect(x - s * .32, y + s * .11, s * .64, s * .25);
-  ctx.fillStyle = '#423126';
-  ctx.fillRect(x - s * .26, y + s * .23, s * .52, s * .09);
-  ctx.fillStyle = meta.stone;
-  ctx.fillRect(x - s * .25, y - s * .15, s * .50, s * .37);
-  ctx.fillStyle = 'rgba(244,231,191,.26)';
-  ctx.fillRect(x - s * .20, y - s * .11, s * .11, s * .08);
-  ctx.fillRect(x + s * .08, y - s * .11, s * .11, s * .08);
-  ctx.fillStyle = 'rgba(22,20,22,.32)';
-  ctx.fillRect(x - s * .25, y + s * .15, s * .50, s * .07);
-  ctx.fillStyle = '#24242a';
-  ctx.fillRect(x - s * .15, y + s * .04, s * .30, s * .12);
-  ctx.fillStyle = 'rgba(0,0,0,.22)';
-  ctx.fillRect(x - s * .25, y - s * .15, s * .05, s * .37);
-  ctx.fillStyle = meta.roof;
-  ctx.fillRect(x - s * .32, y - s * .25, s * .64, s * .15);
-  ctx.fillStyle = meta.trim;
-  ctx.fillRect(x - s * .24, y - s * .31, s * .48, s * .06);
-  ctx.fillStyle = 'rgba(255,245,194,.18)';
-  ctx.fillRect(x - s * .24, y - s * .25, s * .48, s * .03);
-}
-
-function drawArrowTower(ctx, x, y, s, meta) {
-  ctx.fillStyle = '#5b4325';
-  ctx.fillRect(x - s * .06, y - s * .48, s * .12, s * .29);
-  ctx.fillStyle = '#2d2116';
-  ctx.fillRect(x - s * .09, y - s * .42, s * .18, s * .06);
-  ctx.fillStyle = meta.color;
-  ctx.fillRect(x - s * .23, y - s * .48, s * .46, s * .08);
-  ctx.fillRect(x + s * .16, y - s * .55, s * .08, s * .20);
-  ctx.fillStyle = meta.trim;
-  ctx.fillRect(x - s * .18, y - s * .54, s * .10, s * .05);
-  ctx.fillRect(x + s * .02, y - s * .54, s * .10, s * .05);
-  ctx.fillStyle = '#f8e9a3';
-  ctx.fillRect(x + s * .25, y - s * .49, s * .16, s * .05);
-}
-
-function drawBurstTower(ctx, x, y, s, meta) {
-  ctx.fillStyle = '#2d1712';
-  ctx.fillRect(x - s * .38, y - s * .39, s * .16, s * .12);
-  ctx.fillStyle = '#542518';
-  ctx.fillRect(x - s * .32, y - s * .44, s * .64, s * .14);
-  ctx.fillStyle = '#261513';
-  ctx.fillRect(x + s * .20, y - s * .40, s * .17, s * .07);
-  ctx.fillStyle = meta.color;
-  ctx.fillRect(x - s * .18, y - s * .49, s * .30, s * .09);
-  pixelDiamond(ctx, x - s * .02, y - s * .35, s * .13, meta.trim);
-  ctx.fillStyle = 'rgba(255, 230, 144, .55)';
-  ctx.fillRect(x - s * .06, y - s * .39, s * .08, s * .08);
-}
-
-function drawFrostTower(ctx, x, y, s, meta) {
-  ctx.fillStyle = '#214d64';
-  ctx.fillRect(x - s * .08, y - s * .48, s * .16, s * .30);
-  ctx.fillStyle = '#173447';
-  ctx.fillRect(x - s * .13, y - s * .36, s * .26, s * .06);
-  ctx.fillStyle = meta.color;
-  pixelDiamond(ctx, x, y - s * .56, s * .15, meta.color);
-  ctx.fillStyle = meta.trim;
-  ctx.fillRect(x - s * .20, y - s * .39, s * .40, s * .06);
-  ctx.fillRect(x - s * .03, y - s * .68, s * .06, s * .30);
-  ctx.fillStyle = 'rgba(220, 251, 255, .42)';
-  ctx.fillRect(x + s * .05, y - s * .62, s * .05, s * .12);
-}
-
-function drawTowerBadge(ctx, x, y, s, level, meta) {
-  ctx.fillStyle = '#21170f';
-  ctx.fillRect(x - s * .13, y + s * .15, s * .26, s * .17);
-  ctx.strokeStyle = meta.trim;
-  ctx.lineWidth = 2;
-  ctx.strokeRect(x - s * .13, y + s * .15, s * .26, s * .17);
-  ctx.fillStyle = PALETTE.cream;
-  ctx.font = `bold ${Math.floor(s * .15)}px ui-monospace, monospace`;
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(String(level), x, y + s * .24);
-}
-
-function drawEnemies(ctx, content, state, m, alpha = 0) {
-  for (const e of state.enemies) {
-    const p = enemyPx(e, content, m, state, alpha);
-    const meta = ENEMY_META[e.typeId] ?? ENEMY_META.grunt;
-    const s = Math.min(m.cellW, m.cellH) * meta.size;
-    const bob = enemyBob(e, state, alpha);
-    ctx.fillStyle = PALETTE.shadow;
-    ctx.fillRect(p.x - s * .48, p.y + s * .42, s * .96, 6);
-
-    const spriteName = e.typeId === 'runner' ? 'enemyRunner' : e.typeId === 'brute' ? 'enemyBrute' : 'enemyGrunt';
-    drawEnemyMotionAccent(ctx, e, p.x, p.y + bob, s, state.tick + alpha);
-    const drewAsset = drawSprite(ctx, spriteName, p.x - s * .62, p.y - s * .76 + bob, s * 1.24, s * 1.24);
-    if (!drewAsset) {
-      if (e.typeId === 'runner') drawRunner(ctx, p.x, p.y + bob, s, meta, state.tick + alpha);
-      else if (e.typeId === 'brute') drawBrute(ctx, p.x, p.y + bob, s, meta);
-      else drawGrunt(ctx, p.x, p.y + bob, s, meta);
-    }
-
-    drawHealth(ctx, p.x, p.y - s * .88, Math.max(24, s * 1.18), 7, Math.max(0, e.hp / e.maxHp));
-    if (e.slow) drawSlowOverlay(ctx, p.x, p.y, s);
-  }
-}
-
-function drawEnemyMotionAccent(ctx, e, x, y, s, tick) {
-  const phase = Math.sin((tick + e.num) * (e.typeId === 'runner' ? .9 : .45));
-  if (e.typeId === 'runner') {
-    ctx.fillStyle = 'rgba(255, 220, 139, .32)';
-    ctx.fillRect(Math.floor(x - s * .86 - phase * 2), Math.floor(y - s * .13), Math.floor(s * .32), Math.max(2, Math.floor(s * .08)));
-    ctx.fillStyle = 'rgba(83, 25, 31, .35)';
-    ctx.fillRect(Math.floor(x - s * .68), Math.floor(y + s * .26 + phase), Math.floor(s * .26), Math.max(2, Math.floor(s * .07)));
-  } else if (e.typeId === 'brute') {
-    ctx.fillStyle = 'rgba(29, 17, 50, .30)';
-    ctx.fillRect(Math.floor(x - s * .65), Math.floor(y + s * .39), Math.floor(s * .28), Math.max(3, Math.floor(s * .08)));
-    ctx.fillRect(Math.floor(x + s * .36), Math.floor(y + s * .38), Math.floor(s * .30), Math.max(3, Math.floor(s * .08)));
-  } else {
-    ctx.fillStyle = 'rgba(239, 216, 144, .26)';
-    ctx.fillRect(Math.floor(x + s * .37), Math.floor(y - s * .08 + phase), Math.floor(s * .18), Math.max(2, Math.floor(s * .11)));
-  }
-}
-
-function drawGrunt(ctx, x, y, s, meta) {
-  ctx.fillStyle = meta.shade;
-  ctx.fillRect(x - s * .40, y - s * .16, s * .80, s * .56);
-  ctx.fillStyle = meta.color;
-  ctx.fillRect(x - s * .30, y - s * .47, s * .60, s * .56);
-  ctx.fillStyle = 'rgba(255,236,172,.20)';
-  ctx.fillRect(x - s * .23, y - s * .42, s * .18, s * .43);
-  ctx.fillStyle = '#ead18b';
-  ctx.fillRect(x - s * .20, y - s * .55, s * .40, s * .10);
-  ctx.fillStyle = '#7d6135';
-  ctx.fillRect(x - s * .27, y - s * .49, s * .10, s * .06);
-  ctx.fillRect(x + s * .17, y - s * .49, s * .10, s * .06);
-  ctx.fillStyle = meta.eye;
-  ctx.fillRect(x - s * .15, y - s * .24, s * .09, s * .10);
-  ctx.fillRect(x + s * .07, y - s * .24, s * .09, s * .10);
-  ctx.fillStyle = '#5b4027';
-  ctx.fillRect(x - s * .47, y + s * .16, s * .20, s * .12);
-  ctx.fillRect(x + s * .27, y + s * .16, s * .20, s * .12);
-}
-
-function drawRunner(ctx, x, y, s, meta, tick) {
-  const bob = tick % 12 < 6 ? 2 : -1;
-  ctx.fillStyle = meta.shade;
-  ctx.fillRect(x - s * .54, y + s * .17 + bob, s * .30, s * .13);
-  ctx.fillRect(x + s * .13, y + s * .18 - bob, s * .46, s * .13);
-  ctx.fillStyle = 'rgba(84, 25, 29, .45)';
-  ctx.fillRect(x - s * .58, y - s * .01 + bob, s * .18, s * .08);
-  ctx.fillStyle = meta.color;
-  ctx.fillRect(x - s * .44, y - s * .23, s * .72, s * .40);
-  ctx.fillRect(x - s * .04, y - s * .48, s * .40, s * .25);
-  ctx.fillStyle = 'rgba(255,205,139,.20)';
-  ctx.fillRect(x - s * .35, y - s * .20, s * .22, s * .08);
-  ctx.fillStyle = '#f0a06d';
-  ctx.fillRect(x + s * .21, y - s * .53, s * .20, s * .08);
-  ctx.fillStyle = meta.eye;
-  ctx.fillRect(x + s * .17, y - s * .39, s * .10, s * .10);
-  ctx.fillStyle = 'rgba(255, 216, 133, .33)';
-  ctx.fillRect(x - s * .66, y - s * .10, s * .18, s * .07);
-}
-
-function drawBrute(ctx, x, y, s, meta) {
-  ctx.fillStyle = meta.shade;
-  ctx.fillRect(x - s * .54, y - s * .12, s * 1.08, s * .62);
-  ctx.fillStyle = meta.color;
-  ctx.fillRect(x - s * .40, y - s * .58, s * .80, s * .70);
-  ctx.fillStyle = 'rgba(221, 198, 255, .18)';
-  ctx.fillRect(x - s * .30, y - s * .51, s * .22, s * .52);
-  ctx.fillStyle = '#cdb6ff';
-  ctx.fillRect(x - s * .50, y - s * .68, s * .18, s * .20);
-  ctx.fillRect(x + s * .32, y - s * .68, s * .18, s * .20);
-  ctx.fillStyle = '#221535';
-  ctx.fillRect(x - s * .08, y - s * .67, s * .16, s * .10);
-  ctx.fillStyle = '#6f59ac';
-  ctx.fillRect(x - s * .27, y - s * .02, s * .54, s * .18);
-  ctx.fillStyle = meta.eye;
-  ctx.fillRect(x - s * .17, y - s * .32, s * .11, s * .11);
-  ctx.fillRect(x + s * .06, y - s * .32, s * .11, s * .11);
-  ctx.fillStyle = '#2c1e44';
-  ctx.fillRect(x - s * .61, y + s * .10, s * .18, s * .18);
-  ctx.fillRect(x + s * .43, y + s * .10, s * .18, s * .18);
-}
-
-function drawSlowOverlay(ctx, x, y, s) {
-  ctx.strokeStyle = 'rgba(142, 223, 240, .78)';
-  ctx.lineWidth = 2;
-  ctx.setLineDash([5, 4]);
-  ctx.strokeRect(Math.floor(x - s * .64), Math.floor(y - s * .64), Math.floor(s * 1.28), Math.floor(s * 1.28));
-  ctx.setLineDash([]);
-  ctx.fillStyle = 'rgba(142, 223, 240, .20)';
-  ctx.fillRect(x - s * .44, y - s * .50, s * .88, s * .88);
-  pixelDiamond(ctx, x + s * .45, y - s * .42, s * .12, '#dcfbff');
-  ctx.fillStyle = 'rgba(220, 251, 255, .42)';
-  ctx.fillRect(x - s * .50, y + s * .34, s * .22, 2);
-}
-
-function drawEffects(ctx, content, state, m, alpha = 0) {
-  for (const ev of state.events ?? []) {
-    if (ev.type === 'tower.fired') {
-      const tower = state.towers.find(t => t.id === ev.towerId);
-      const enemy = state.enemies.find(e => e.id === ev.targetId);
-      if (!tower || !enemy) continue;
-      const from = { x: (tower.tileX + .5) * m.cellW, y: (tower.tileY + .5) * m.cellH - m.tile * .20 };
-      const to = enemyPx(enemy, content, m, state, alpha);
-      const meta = TOWER_META[tower.typeId] ?? TOWER_META.arrow;
-      if (tower.typeId === 'arrow') drawBolt(ctx, from, to, meta.color);
-      else if (tower.typeId === 'burst') drawBlast(ctx, from, to, meta);
-      else drawFrostBeam(ctx, from, to, meta);
-    }
-    if (ev.type === 'enemy.killed') {
-      const enemy = state.enemies.find(e => e.id === ev.enemyId);
-      if (enemy) {
-        const p = enemyPx(enemy, content, m, state, alpha);
-        pixelDiamond(ctx, p.x, p.y, m.tile * .18, '#ffe38a');
-        ctx.fillStyle = 'rgba(255, 236, 166, .55)';
-        ctx.fillRect(p.x - 18, p.y - 2, 36, 4);
-        ctx.fillRect(p.x - 2, p.y - 18, 4, 36);
-      }
-    }
-  }
-}
-
-function drawBolt(ctx, from, to, color) {
-  ctx.strokeStyle = 'rgba(49, 33, 16, .45)';
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(from.x + 1, from.y + 2);
-  ctx.lineTo(to.x + 1, to.y + 2);
-  ctx.stroke();
-  ctx.strokeStyle = '#fff0a8';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(from.x, from.y);
-  ctx.lineTo(to.x, to.y);
-  ctx.stroke();
-  ctx.fillStyle = color;
-  pixelDiamond(ctx, to.x, to.y, 6, color);
-  ctx.fillStyle = 'rgba(255, 244, 190, .55)';
-  ctx.fillRect(to.x - 8, to.y - 1, 16, 2);
-}
-
-function drawBlast(ctx, from, to, meta) {
-  ctx.strokeStyle = 'rgba(53, 28, 18, .45)';
-  ctx.lineWidth = 7;
-  ctx.beginPath();
-  ctx.moveTo(from.x + 1, from.y + 2);
-  ctx.lineTo(to.x + 1, to.y + 2);
-  ctx.stroke();
-  ctx.strokeStyle = meta.color;
-  ctx.lineWidth = 4;
-  ctx.beginPath();
-  ctx.moveTo(from.x, from.y);
-  ctx.lineTo(to.x, to.y);
-  ctx.stroke();
-  ctx.strokeStyle = 'rgba(255, 209, 123, .78)';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.arc(to.x, to.y, 22, 0, Math.PI * 2);
-  ctx.stroke();
-  pixelDiamond(ctx, to.x, to.y, 12, '#ffd17b');
-  pixelDiamond(ctx, to.x, to.y, 5, '#ff6f2d');
-}
-
-function drawFrostBeam(ctx, from, to, meta) {
-  ctx.strokeStyle = 'rgba(20, 52, 70, .40)';
-  ctx.lineWidth = 5;
-  ctx.beginPath();
-  ctx.moveTo(from.x + 1, from.y + 2);
-  ctx.lineTo(to.x + 1, to.y + 2);
-  ctx.stroke();
-  ctx.strokeStyle = 'rgba(220, 251, 255, .78)';
-  ctx.lineWidth = 3;
-  ctx.beginPath();
-  ctx.moveTo(from.x, from.y);
-  ctx.lineTo(to.x, to.y);
-  ctx.stroke();
-  ctx.strokeStyle = meta.color;
-  ctx.lineWidth = 1;
-  ctx.beginPath();
-  ctx.moveTo(from.x - 5, from.y);
-  ctx.lineTo(to.x + 5, to.y);
-  ctx.stroke();
-  pixelDiamond(ctx, to.x, to.y, 9, meta.trim);
-  ctx.fillStyle = 'rgba(220, 251, 255, .50)';
-  ctx.fillRect(to.x - 10, to.y + 7, 20, 2);
-}
-
-function drawHover(ctx, content, state, ui, m) {
-  if (!ui.hover) return;
-  const ok = ui.buildType && canPlaceTower(state, ui.hover.x, ui.hover.y, content).ok;
-  const x = ui.hover.x * m.cellW, y = ui.hover.y * m.cellH;
-  ctx.fillStyle = ok ? PALETTE.valid : PALETTE.invalid;
-  ctx.fillRect(x + 5, y + 5, m.cellW - 10, m.cellH - 10);
-  ctx.strokeStyle = ok ? '#c8f59d' : '#ff9a85';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(x + 8, y + 8, m.cellW - 16, m.cellH - 16);
-  if (ok) {
-    ctx.fillStyle = 'rgba(255, 244, 188, .55)';
-    pixelDiamond(ctx, x + m.cellW / 2, y + m.cellH / 2, 12, 'rgba(255, 244, 188, .55)');
-  }
-}
-
-function drawHealth(ctx, x, y, w, h, pct) {
-  ctx.fillStyle = '#120c10';
-  ctx.fillRect(x - w / 2 - 1, y - 1, w + 2, h + 2);
-  ctx.fillStyle = PALETTE.hpBack;
-  ctx.fillRect(x - w / 2, y, w, h);
-  ctx.fillStyle = PALETTE.hp;
-  ctx.fillRect(x - w / 2 + 1, y + 1, Math.max(0, (w - 2) * pct), h - 2);
-  ctx.fillStyle = 'rgba(244, 231, 191, .25)';
-  ctx.fillRect(x - w / 2 + 1, y + 1, Math.max(0, (w - 2) * pct), 1);
-}
-
-function drawMapFrame(ctx, canvas) {
-  ctx.strokeStyle = '#20150f';
-  ctx.lineWidth = 12;
-  ctx.strokeRect(6, 6, canvas.width - 12, canvas.height - 12);
-  ctx.strokeStyle = '#8b6434';
-  ctx.lineWidth = 6;
-  ctx.strokeRect(13, 13, canvas.width - 26, canvas.height - 26);
-  ctx.strokeStyle = '#d4b374';
-  ctx.lineWidth = 2;
-  ctx.strokeRect(21, 21, canvas.width - 42, canvas.height - 42);
-  for (const [x, y] of [[24, 24], [canvas.width - 24, 24], [24, canvas.height - 24], [canvas.width - 24, canvas.height - 24]]) {
-    if (!drawSprite(ctx, 'uiCorner', x - 8, y - 8, 16, 16)) {
-      pixelDiamond(ctx, x, y, 8, '#d4b374');
-      pixelDiamond(ctx, x, y, 4, '#4b3320');
-    }
-  }
-}
-
-function drawResult(ctx, canvas, outcome) {
-  ctx.fillStyle = 'rgba(16, 10, 8, .72)';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  ctx.fillStyle = '#2b1d15';
-  ctx.fillRect(canvas.width / 2 - 185, canvas.height / 2 - 56, 370, 112);
-  ctx.strokeStyle = '#d4b374';
-  ctx.lineWidth = 4;
-  ctx.strokeRect(canvas.width / 2 - 178, canvas.height / 2 - 49, 356, 98);
-  ctx.fillStyle = outcome === 'win' ? '#a9ee8f' : '#e67861';
-  ctx.font = 'bold 58px ui-monospace, monospace';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  ctx.fillText(outcome.toUpperCase(), canvas.width / 2, canvas.height / 2);
-}
-
-function enemyPx(e, content, m, state = null, alpha = 0) {
-  let progress = e.progress;
-  if (state && !e.killed && !e.leaked) {
-    const def = content.enemies[e.typeId];
-    const slowPct = e.slow && e.slow.untilTick >= state.tick ? e.slow.percent : 0;
-    progress += Math.max(1, Math.floor(def.speedUnitsPerTick * (100 - slowPct) / 100)) * Math.max(0, Math.min(1, alpha));
-  }
-  return {
-    x: Math.min(m.gridW * m.cellW, (progress / content.map.lanes[0].pathLengthUnits) * m.gridW * m.cellW),
-    y: 2.5 * m.cellH
-  };
-}
-
-function enemyBob(e, state, alpha) {
-  const speed = e.typeId === 'runner' ? 1.8 : e.typeId === 'brute' ? .7 : 1.1;
-  const amp = e.typeId === 'brute' ? 1.1 : e.typeId === 'runner' ? 2.2 : 1.5;
-  return Math.round(Math.sin((state.tick + alpha) * speed * .55 + e.num) * amp);
-}
-
-function pixelDiamond(ctx, x, y, r, color) {
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(x, y - r);
-  ctx.lineTo(x + r, y);
-  ctx.lineTo(x, y + r);
-  ctx.lineTo(x - r, y);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function makeArtAtlas() {
-  if (typeof Image === 'undefined') return { image: null };
-  const image = new Image();
-  image.src = './assets/art-handdrawn/lil8td-sprite-set-v2.png';
-  return { image };
-}
-
-function sprite(x, y, w, h) {
-  return { x: x * ART_SCALE, y: y * ART_SCALE, w: w * ART_SCALE, h: h * ART_SCALE };
-}
-
-function drawSprite(ctx, name, x, y, w, h) {
-  const image = ART_ATLAS.image;
-  const s = ART_SPRITES[name];
-  if (!image || !s || !image.complete || image.naturalWidth === 0) return false;
-  ctx.drawImage(image, s.x, s.y, s.w, s.h, Math.floor(x), Math.floor(y), Math.ceil(w), Math.ceil(h));
+export function drawSprite(ctx, name, x, y, w, h, flip = false) {
+  const s = SPRITES[name];
+  if (!s || !atlasReady()) return false;
+  if (flip) {
+    ctx.save(); ctx.translate(Math.round(x + w), Math.round(y)); ctx.scale(-1, 1);
+    ctx.drawImage(atlas, s.x, s.y, s.w, s.h, 0, 0, Math.round(w), Math.round(h));
+    ctx.restore();
+  } else ctx.drawImage(atlas, s.x, s.y, s.w, s.h, Math.round(x), Math.round(y), Math.round(w), Math.round(h));
   return true;
 }
 
-function hash(x, y) {
-  let n = (x + 11) * 374761393 + (y + 17) * 668265263;
-  n = (n ^ (n >> 13)) * 1274126177;
-  return Math.abs(n ^ (n >> 16));
+/** Draw a sprite into a small standalone canvas (used for DOM icons/portraits). */
+export function spriteCanvas(name, w, h) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const ctx = c.getContext('2d'); ctx.imageSmoothingEnabled = false;
+  const paint = () => { ctx.clearRect(0, 0, w, h); const s = SPRITES[name]; const k = Math.min(w / s.w, h / s.h); drawSprite(ctx, name, (w - s.w * k) / 2, (h - s.h * k) / 2, s.w * k, s.h * k); };
+  if (atlasReady()) paint(); else atlasListeners.add(paint);
+  return c;
 }
-function clamp(n, min, max) { return Math.max(min, Math.min(max, n)); }
+
+export function makeRenderer(canvas, content, opts = {}) {
+  const ctx = canvas.getContext('2d');
+  const mini = !!opts.mini;
+  let terrain = null;
+  loadAtlas();
+  atlasListeners.add(() => { terrain = null; });
+  const metrics = () => {
+    const gridW = content.map.buildRules.gridWidth, gridH = content.map.buildRules.gridHeight;
+    const cell = Math.min(canvas.width / gridW, canvas.height / gridH);
+    return { gridW, gridH, cell, ox: (canvas.width - cell * gridW) / 2, oy: (canvas.height - cell * gridH) / 2 };
+  };
+  return {
+    draw(match, slot, ui = {}, alpha = 0, fx = null, now = 0) {
+      const m = metrics();
+      if (!terrain || terrain.width !== canvas.width || terrain.height !== canvas.height) terrain = bakeTerrain(canvas.width, canvas.height, content, m, mini);
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(terrain, 0, 0);
+      const board = match.boards[slot];
+      if (!board) return;
+      drawAuras(ctx, board, content, m, now);
+      if (!mini) drawPlacement(ctx, board, content, ui, m);
+      drawEntities(ctx, match, board, content, ui, m, alpha, now, mini);
+      if (fx) fx.draw(ctx, slot, m, now);
+      if (board.collapsedTick != null) drawCollapsed(ctx, canvas, mini);
+    },
+    tileAt(evt) {
+      const m = metrics();
+      const r = canvas.getBoundingClientRect();
+      const cs = getComputedStyle(canvas);
+      const bl = parseFloat(cs.borderLeftWidth) || 0, bt = parseFloat(cs.borderTopWidth) || 0;
+      const sx = canvas.width / (r.width - bl * 2), sy = canvas.height / (r.height - bt * 2);
+      const px = (evt.clientX - r.left - bl) * sx, py = (evt.clientY - r.top - bt) * sy;
+      const x = Math.floor((px - m.ox) / m.cell), y = Math.floor((py - m.oy) / m.cell);
+      if (x < 0 || y < 0 || x >= m.gridW || y >= m.gridH) return null;
+      return { x, y };
+    },
+    metrics,
+    unitToPx(p) { const m = metrics(); return { x: m.ox + p.x / 1000 * m.cell, y: m.oy + p.y / 1000 * m.cell }; }
+  };
+}
+
+// ---------------------------------------------------------------- terrain
+
+function hash(x, y) { let n = (x + 11) * 374761393 + (y + 17) * 668265263; n = (n ^ (n >> 13)) * 1274126177; return Math.abs(n ^ (n >> 16)); }
+
+function grassIndex(x, y) {
+  // cluster grass families A/B/C over 3x2 blocks instead of per-tile confetti
+  const roll = Math.abs(Math.floor(x / 3) * 17 + Math.floor(y / 2) * 29 + hash(Math.floor(x / 2), Math.floor(y / 2))) % 10;
+  return roll < 5 ? 0 : roll < 7 ? 1 : roll < 9 ? 2 : 3;
+}
+
+function roadPiece(dirs, x, y) {
+  const has = d => dirs.has(d);
+  const v = hash(x, y) % 4;
+  if (has('W') && has('S')) return 'cornerWS';
+  if (has('S') && has('E')) return 'cornerSE';
+  if (has('E') && has('N')) return 'cornerEN';
+  if (has('N') && has('W')) return 'cornerNW';
+  if (has('N') || has('S')) return `pathV${v}`;
+  return `pathH${v}`;
+}
+
+function bakeTerrain(w, h, content, m, mini) {
+  const c = document.createElement('canvas'); c.width = w; c.height = h;
+  const g = c.getContext('2d'); g.imageSmoothingEnabled = false;
+  g.fillStyle = '#07100e'; g.fillRect(0, 0, w, h);
+  const lane = content.lane;
+  for (let y = 0; y < m.gridH; y++) for (let x = 0; x < m.gridW; x++) {
+    const px = m.ox + x * m.cell, py = m.oy + y * m.cell;
+    const key = `${x},${y}`;
+    if (lane.tileSet.has(key)) {
+      if (!drawSprite(g, roadPiece(lane.tileDirs.get(key), x, y), px, py, m.cell + 0.5, m.cell + 0.5)) { g.fillStyle = '#a36932'; g.fillRect(px, py, m.cell, m.cell); }
+    } else {
+      if (!drawSprite(g, `grass${grassIndex(x, y)}`, px, py, m.cell + 0.5, m.cell + 0.5)) { g.fillStyle = (x + y) % 2 ? '#20472a' : '#1b3c24'; g.fillRect(px, py, m.cell, m.cell); }
+    }
+  }
+  // soft macro patches hide the tile carpet without adding noise
+  for (const [ax, ay, r, col] of [[1.8, 3.2, .7, 'rgba(118,133,69,.12)'], [7.6, .8, .6, 'rgba(19,50,39,.16)'], [10.4, 3.4, .7, 'rgba(121,93,52,.10)'], [4.8, 6.6, .6, 'rgba(93,114,58,.13)']]) {
+    diamond(g, m.ox + ax * m.cell, m.oy + ay * m.cell, m.cell * r, col);
+  }
+  // build pins: calm plus-marks on legal tiles (quieter than towers/enemies)
+  if (!mini) for (let y = 0; y < m.gridH; y++) for (let x = 0; x < m.gridW; x++) {
+    if (lane.tileSet.has(`${x},${y}`) || content.blockedSet.has(`${x},${y}`)) continue;
+    const cx = m.ox + (x + .5) * m.cell, cy = m.oy + (y + .5) * m.cell, k = m.cell / 80;
+    g.fillStyle = 'rgba(218,193,126,.13)';
+    g.fillRect(cx - 6 * k, cy - 1 * k, 12 * k, 2 * k); g.fillRect(cx - 1 * k, cy - 6 * k, 2 * k, 12 * k);
+  }
+  // props on blocked tiles
+  for (const key of content.blockedSet) {
+    const [x, y] = key.split(',').map(Number);
+    drawSprite(g, hash(x, y) % 2 ? 'tree' : 'rock', m.ox + x * m.cell, m.oy + y * m.cell, m.cell, m.cell);
+  }
+  // lane caps: rift where raiders enter, keep the player defends
+  const start = lane.tiles[0], end = lane.tiles[lane.tiles.length - 1];
+  drawSprite(g, 'rift', m.ox + (start.x + .05) * m.cell, m.oy + (start.y - .55) * m.cell, m.cell * .9, m.cell * .9);
+  drawSprite(g, 'keep', m.ox + (end.x + .1) * m.cell, m.oy + (end.y - .95) * m.cell, m.cell * .8, m.cell * 1.1);
+  // frame
+  const fw = Math.max(3, Math.round(m.cell / 10));
+  g.strokeStyle = '#20150f'; g.lineWidth = fw * 2; g.strokeRect(0, 0, w, h);
+  g.strokeStyle = '#8b6434'; g.lineWidth = Math.max(2, fw * .7); g.strokeRect(fw * 1.3, fw * 1.3, w - fw * 2.6, h - fw * 2.6);
+  if (!mini) for (const [x, y] of [[fw * 2, fw * 2], [w - fw * 2, fw * 2], [fw * 2, h - fw * 2], [w - fw * 2, h - fw * 2]]) drawSprite(g, 'iconCorner', x - 8, y - 8, 16, 16);
+  return c;
+}
+
+function diamond(ctx, x, y, r, color) {
+  ctx.fillStyle = color; ctx.beginPath(); ctx.moveTo(x, y - r); ctx.lineTo(x + r, y); ctx.lineTo(x, y + r); ctx.lineTo(x - r, y); ctx.closePath(); ctx.fill();
+}
+
+// ---------------------------------------------------------------- dynamic layers
+
+function tileCenter(m, x, y) { return { x: m.ox + (x + .5) * m.cell, y: m.oy + (y + .5) * m.cell }; }
+
+function drawAuras(ctx, board, content, m, now) {
+  for (const t of board.towers) {
+    const lvl = content.towers[t.typeId].levels[t.level - 1];
+    if (lvl.attackType !== 'aura') continue;
+    const c = tileCenter(m, t.tileX, t.tileY); const r = lvl.rangeUnits / 1000 * m.cell;
+    const pulse = .10 + .04 * Math.sin(now / 400 + t.num);
+    ctx.fillStyle = `rgba(63,224,197,${pulse})`;
+    ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(63,224,197,.35)'; ctx.lineWidth = 2; ctx.setLineDash([4, 6]);
+    ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+  }
+}
+
+function rangeCircle(ctx, c, r, color, fill = false) {
+  if (fill) { ctx.fillStyle = 'rgba(244,231,191,.07)'; ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.fill(); }
+  ctx.strokeStyle = 'rgba(20,12,8,.55)'; ctx.lineWidth = 4; ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.stroke();
+  ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.setLineDash([10, 6]); ctx.beginPath(); ctx.arc(c.x, c.y, r, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+}
+
+function drawPlacement(ctx, board, content, ui, m) {
+  const sel = ui.selectedTowerId && board.towers.find(t => t.id === ui.selectedTowerId);
+  if (sel) {
+    const lvl = content.towers[sel.typeId].levels[sel.level - 1];
+    rangeCircle(ctx, tileCenter(m, sel.tileX, sel.tileY), lvl.rangeUnits / 1000 * m.cell, TOWER_COLORS[sel.typeId], true);
+    const c = tileCenter(m, sel.tileX, sel.tileY);
+    ctx.strokeStyle = '#ffe59a'; ctx.lineWidth = 3; ctx.strokeRect(c.x - m.cell / 2 + 3, c.y - m.cell / 2 + 3, m.cell - 6, m.cell - 6);
+  }
+  if (!ui.hover || !ui.buildType) return;
+  const { x, y } = ui.hover;
+  const place = canPlaceTower(board, x, y, content);
+  const affordable = board.currency >= content.towers[ui.buildType].buildCost;
+  const ok = place.ok && affordable;
+  const px = m.ox + x * m.cell, py = m.oy + y * m.cell;
+  ctx.fillStyle = ok ? 'rgba(116,224,105,.22)' : 'rgba(218,73,65,.28)';
+  ctx.fillRect(px + 4, py + 4, m.cell - 8, m.cell - 8);
+  ctx.strokeStyle = ok ? '#c8f59d' : '#ff9a85'; ctx.lineWidth = 3; ctx.strokeRect(px + 6, py + 6, m.cell - 12, m.cell - 12);
+  if (place.ok) {
+    const lvl = content.towers[ui.buildType].levels[0];
+    rangeCircle(ctx, tileCenter(m, x, y), lvl.rangeUnits / 1000 * m.cell, ok ? TOWER_COLORS[ui.buildType] : '#ff9a85');
+    ctx.globalAlpha = .55; drawTowerSprite(ctx, ui.buildType, tileCenter(m, x, y), m.cell); ctx.globalAlpha = 1;
+  }
+}
+
+function drawTowerSprite(ctx, typeId, c, cell) {
+  const dw = cell * 1.0, dh = dw * 1.5;
+  if (!drawSprite(ctx, typeId, c.x - dw / 2, c.y + cell * .40 - dh * (62 / 72), dw, dh)) {
+    ctx.fillStyle = TOWER_COLORS[typeId]; ctx.fillRect(c.x - cell * .3, c.y - cell * .4, cell * .6, cell * .7);
+  }
+}
+
+function enemyScreen(e, board, content, m, tick, alpha) {
+  let progress = e.progress;
+  if (alpha > 0) progress += enemySpeed(e, content.enemies[e.typeId], tick) * alpha;
+  const p = pointAtProgress(content.lane, Math.min(content.lane.length, progress));
+  return { x: m.ox + p.x / 1000 * m.cell, y: m.oy + p.y / 1000 * m.cell, dx: p.dx, dy: p.dy };
+}
+export { enemyScreen };
+
+function drawEntities(ctx, match, board, content, ui, m, alpha, now, mini) {
+  const list = [];
+  for (const t of board.towers) { const c = tileCenter(m, t.tileX, t.tileY); list.push({ y: c.y + m.cell * .3, draw: () => drawTower(ctx, t, board, content, c, m, now, mini) }); }
+  for (const e of board.enemies) {
+    const p = enemyScreen(e, board, content, m, match.tick, alpha);
+    list.push({ y: p.y + m.cell * .2, draw: () => drawEnemy(ctx, e, p, m, now, mini) });
+  }
+  list.sort((a, b) => a.y - b.y);
+  for (const it of list) it.draw();
+}
+
+function drawTower(ctx, t, board, content, c, m, now, mini) {
+  ctx.fillStyle = 'rgba(0,0,0,.30)';
+  ctx.beginPath(); ctx.ellipse(c.x, c.y + m.cell * .33, m.cell * .36, m.cell * .10, 0, 0, Math.PI * 2); ctx.fill();
+  drawTowerSprite(ctx, t.typeId, c, m.cell);
+  if (mini) return;
+  // level pips (gold diamonds) and teal pip when buffed by a Beacon
+  const k = m.cell / 80;
+  for (let i = 0; i < t.level; i++) diamond(ctx, c.x - (t.level - 1) * 7 * k + i * 14 * k, c.y + m.cell * .43, 5 * k, i < t.level ? '#ffe08a' : '#5a4a30');
+  for (let i = 0; i < t.level; i++) diamond(ctx, c.x - (t.level - 1) * 7 * k + i * 14 * k, c.y + m.cell * .43, 2.5 * k, '#7a4f1c');
+  if (auraBonusPercent(board, t, content) > 0) diamond(ctx, c.x + m.cell * .38, c.y - m.cell * .30, 6 * k + Math.sin(now / 300) * 1.2, TEAL);
+}
+
+function drawEnemy(ctx, e, p, m, now, mini) {
+  const size = m.cell * (ENEMY_SIZE[e.typeId] ?? .6);
+  const s = (e.typeId === 'warlord') ? { w: size, h: size * 40 / 48 } : { w: size, h: size };
+  const bob = Math.round(Math.sin(now / (e.typeId === 'runner' ? 70 : e.typeId === 'brute' || e.typeId === 'warlord' ? 220 : 120) + e.num) * m.cell * .02);
+  const feet = p.y + m.cell * .22;
+  ctx.fillStyle = 'rgba(0,0,0,.32)';
+  ctx.beginPath(); ctx.ellipse(p.x, feet, s.w * .38, s.w * .11, 0, 0, Math.PI * 2); ctx.fill();
+  if (e.source === 'pressure') {
+    // crimson supernatural accent marks sent (pressure) raiders
+    ctx.strokeStyle = 'rgba(224,41,74,.85)'; ctx.lineWidth = Math.max(2, m.cell / 30);
+    ctx.beginPath(); ctx.ellipse(p.x, feet, s.w * .5, s.w * .16, 0, 0, Math.PI * 2); ctx.stroke();
+  }
+  const flip = p.dx < 0;
+  const x = p.x - s.w / 2, y = feet - s.h * .95 + bob;
+  if (!drawSprite(ctx, e.typeId, x, y, s.w, s.h, flip)) { ctx.fillStyle = ENEMY_COLORS[e.typeId]; ctx.fillRect(x + s.w * .2, y + s.h * .2, s.w * .6, s.h * .7); }
+  if (e.slow) {
+    ctx.fillStyle = 'rgba(142,223,240,.28)'; ctx.fillRect(x + s.w * .15, y + s.h * .15, s.w * .7, s.h * .8);
+    diamond(ctx, x + s.w * .85, y + s.h * .15, Math.max(3, m.cell * .05), '#dcfbff');
+  }
+  if (e.source === 'pressure' && !mini) diamond(ctx, x + s.w * .15, y + s.h * .05, Math.max(3, m.cell * .045), CRIMSON);
+  // bars: shield (pale steel) above health
+  const bw = Math.max(m.cell * .45, s.w * .8), bh = Math.max(3, Math.round(m.cell / (mini ? 16 : 14)));
+  const by = y - bh * (e.maxShield ? 2.6 : 1.6);
+  bar(ctx, p.x - bw / 2, by, bw, bh, Math.max(0, e.hp / e.maxHp), e.typeId === 'warlord' ? '#ff6d6d' : '#71db70');
+  if (e.maxShield) bar(ctx, p.x - bw / 2, by + bh + 1, bw, bh, Math.max(0, e.shield / e.maxShield), '#cfe3ff');
+}
+
+function bar(ctx, x, y, w, h, pct, color) {
+  ctx.fillStyle = '#120c10'; ctx.fillRect(Math.round(x - 1), Math.round(y - 1), Math.round(w + 2), Math.round(h + 2));
+  ctx.fillStyle = '#2b1519'; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w), Math.round(h));
+  ctx.fillStyle = color; ctx.fillRect(Math.round(x), Math.round(y), Math.round(w * pct), Math.round(h));
+}
+
+function drawCollapsed(ctx, canvas, mini) {
+  ctx.fillStyle = 'rgba(20,6,8,.62)'; ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = '#ff8a7a'; ctx.font = `bold ${mini ? 28 : 64}px ui-monospace, monospace`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillText('COLLAPSED', canvas.width / 2, canvas.height / 2);
+}
