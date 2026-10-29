@@ -13,7 +13,7 @@ r.metadata = { ...old.metadata, version: '0.2.0', status: 'demo_vs_ai_baseline',
   ] };
 r.constants = { ...old.constants, initialLives: 20, defaultPathLengthUnits: undefined };
 delete r.constants.defaultPathLengthUnits;
-r.economy = { ...old.economy, startingCurrency: 200 };
+r.economy = { ...old.economy, startingCurrency: 220 };
 r.map = {
   mapId: 'mossy_switchback_v1', version: '0.2.0', name: 'Mossy Switchback',
   lanes: [{ laneId: 'main', waypoints: [[0,1],[3,1],[3,5],[6,5],[6,2],[9,2],[9,6],[11,6]] }],
@@ -41,11 +41,11 @@ r.enemies = [
   { id:'warlord', name:'Moss Warlord', role:'boss_final_wave', blurb:'Final-wave boss. Leaking it costs 10 lives.', maxHp:4600, maxShield:1000, speedUnitsPerTick:20, rewardCredits:120, leakDamage:10 }
 ];
 r.pressurePacks = [
-  { id:'grunt_squad', name:'Grunt Squad', short:'Squad', costCredits:40, windupTicks:120, cooldownTicks:180, maxQueuedPerSender:2, unlockAtWaveIndex:0, visibleDuringWindup:true,
+  { id:'grunt_squad', name:'Grunt Squad', short:'Squad', costCredits:40, windupTicks:120, cooldownTicks:180, maxQueuedPerSender:2, unlockAtWaveIndex:1, visibleDuringWindup:true,
     delivery:{ laneId:'main', spawnSource:'pressure', groups:[{ enemyId:'grunt', count:8, firstOffsetTicks:0, intervalTicks:12, rewardCreditsOverride:1 }] } },
-  { id:'runner_rush', name:'Runner Rush', short:'Rush', costCredits:60, windupTicks:120, cooldownTicks:240, maxQueuedPerSender:2, unlockAtWaveIndex:2, visibleDuringWindup:true,
+  { id:'runner_rush', name:'Runner Rush', short:'Rush', costCredits:60, windupTicks:120, cooldownTicks:240, maxQueuedPerSender:2, unlockAtWaveIndex:3, visibleDuringWindup:true,
     delivery:{ laneId:'main', spawnSource:'pressure', groups:[{ enemyId:'runner', count:8, firstOffsetTicks:0, intervalTicks:9, rewardCreditsOverride:1 }] } },
-  { id:'brute_drop', name:'Brute Drop', short:'Brutes', costCredits:110, windupTicks:160, cooldownTicks:360, maxQueuedPerSender:1, unlockAtWaveIndex:4, visibleDuringWindup:true,
+  { id:'brute_drop', name:'Brute Drop', short:'Brutes', costCredits:110, windupTicks:160, cooldownTicks:360, maxQueuedPerSender:1, unlockAtWaveIndex:5, visibleDuringWindup:true,
     delivery:{ laneId:'main', spawnSource:'pressure', groups:[{ enemyId:'brute', count:3, firstOffsetTicks:0, intervalTicks:36, rewardCreditsOverride:3 }] } }
 ];
 const G = (enemyId, count, firstOffsetTicks, intervalTicks) => ({ enemyId, count, firstOffsetTicks, intervalTicks, laneId:'main' });

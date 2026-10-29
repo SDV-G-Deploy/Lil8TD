@@ -43,7 +43,7 @@
   },
   "economy": {
     "currencyId": "credits",
-    "startingCurrency": 200,
+    "startingCurrency": 220,
     "sellRefundRate": 0.65,
     "upgradeRefundRate": 0.5,
     "killRewards": "enemy.rewardCredits",
@@ -385,7 +385,7 @@
       "windupTicks": 120,
       "cooldownTicks": 180,
       "maxQueuedPerSender": 2,
-      "unlockAtWaveIndex": 0,
+      "unlockAtWaveIndex": 1,
       "visibleDuringWindup": true,
       "delivery": {
         "laneId": "main",
@@ -409,7 +409,7 @@
       "windupTicks": 120,
       "cooldownTicks": 240,
       "maxQueuedPerSender": 2,
-      "unlockAtWaveIndex": 2,
+      "unlockAtWaveIndex": 3,
       "visibleDuringWindup": true,
       "delivery": {
         "laneId": "main",
@@ -433,7 +433,7 @@
       "windupTicks": 160,
       "cooldownTicks": 360,
       "maxQueuedPerSender": 1,
-      "unlockAtWaveIndex": 4,
+      "unlockAtWaveIndex": 5,
       "visibleDuringWindup": true,
       "delivery": {
         "laneId": "main",

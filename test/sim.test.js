@@ -152,7 +152,9 @@ test('pressure send: cost, lock, windup delivery onto the opponent board, cooldo
   for (const b of m.boards) b.spawnQueue = [];
   const send = (seq) => ({ type: 'pressure.send', playerSlot: 0, packId: 'grunt_squad', clientCommandSeq: seq });
   assert.equal(pressureBlockReason(m, 0, 'grunt_squad', content), 'locked');
-  m.wavesStarted = 1;
+  m.wavesStarted = content.pressurePacks.grunt_squad.unlockAtWaveIndex;
+  assert.equal(pressureBlockReason(m, 0, 'grunt_squad', content), 'locked', 'still locked until the unlock wave starts');
+  m.wavesStarted = content.pressurePacks.grunt_squad.unlockAtWaveIndex + 1;
   m.boards[0].currency = 500;
   m = step(m, [send(1)], content);
   const pack = content.pressurePacks.grunt_squad;

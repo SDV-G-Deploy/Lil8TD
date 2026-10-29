@@ -34,7 +34,7 @@ const app = {
   mode: 'versus',         // versus | solo | attract
   match: null, bots: [], seq: 1, pending: [],
   ui: { buildType: null, selectedTowerId: null, hover: null },
-  paused: false, speed: 1, acc: 0, last: performance.now(),
+  paused: false, speed: 1, acc: 0, last: performance.now(), lastPointerType: null,
   hudKey: '', panelKey: '', pressureKey: '', threatKey: '',
   bannerUntil: 0, alertUntil: 0, resultShown: false, seed: 'demo'
 };
@@ -167,8 +167,13 @@ function onBoardPointer(evt) {
   }
   if (app.ui.buildType) {
     const place = canPlaceTower(b, tile.x, tile.y, content);
+    // touch: first tap previews the tower + range on that tile, second tap on the same tile builds
+    if (app.lastPointerType !== 'mouse' && !(app.ui.hover && app.ui.hover.x === tile.x && app.ui.hover.y === tile.y)) {
+      app.ui.hover = tile; audio.play('click'); return;
+    }
     if (place.ok && b.currency >= content.towers[app.ui.buildType].buildCost) {
       queue({ type: 'tower.build', towerType: app.ui.buildType, x: tile.x, y: tile.y });
+      if (app.lastPointerType !== 'mouse') app.ui.hover = null;
       // keep the build tool armed for quick repeated placement (desktop), like classic TDs
     } else audio.play('deny');
     return;
@@ -176,8 +181,10 @@ function onBoardPointer(evt) {
   if (app.ui.selectedTowerId) { app.ui.selectedTowerId = null; app.panelKey = ''; }
 }
 
-canvas.addEventListener('pointermove', e => { app.ui.hover = e.pointerType === 'mouse' ? renderer.tileAt(e) : null; });
-canvas.addEventListener('pointerleave', () => { app.ui.hover = null; });
+canvas.addEventListener('pointerdown', e => { app.lastPointerType = e.pointerType || 'mouse'; });
+canvas.addEventListener('pointermove', e => { if (e.pointerType === 'mouse') app.ui.hover = renderer.tileAt(e); });
+canvas.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') app.ui.hover = null; });
+document.addEventListener('visibilitychange', () => { if (document.hidden && app.screen === 'playing' && !app.paused) { app.paused = true; updatePauseBtn(); } });
 canvas.addEventListener('click', onBoardPointer);
 canvas.addEventListener('contextmenu', e => { e.preventDefault(); cancelTool(); });
 
@@ -276,7 +283,7 @@ function renderSelected() {
     key = `b|${def.id}`;
     if (key === app.panelKey) return;
     el.className = 'selected';
-    el.innerHTML = `<div class="selHead"><span class="selIcon"></span><div><b>${def.name}</b> <span class="lvl">&#9670;${def.buildCost}</span><div class="muted small">${def.blurb}</div></div></div><div class="stats2">${statLine(def.levels[0])}</div><div class="small muted">Tap a grass tile to build. Right-click / Esc to cancel.</div>`;
+    el.innerHTML = `<div class="selHead"><span class="selIcon"></span><div><b>${def.name}</b> <span class="lvl">&#9670;${def.buildCost}</span><div class="muted small">${def.blurb}</div></div></div><div class="stats2">${statLine(def.levels[0])}</div><div class="small muted">${app.lastPointerType && app.lastPointerType !== 'mouse' ? 'Tap a grass tile to preview, tap again to build.' : 'Click a grass tile to build. Right-click / Esc to cancel.'}</div>`;
     el.querySelector('.selIcon').appendChild(spriteCanvas(def.id, 36, 50));
   } else {
     key = 'none';
