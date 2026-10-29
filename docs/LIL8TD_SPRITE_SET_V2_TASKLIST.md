@@ -65,9 +65,9 @@ Asset groups:
 - [x] low-count decorative roadside accent set
 
 ## 3.3 Optional future path pieces
-- [ ] turn piece family
-- [ ] entrance cap
-- [ ] exit cap
+- [x] turn piece family (one authored corner, rotated x4; vertical straights rotated from the horizontal family)
+- [x] entrance cap (crimson/teal spawn rift)
+- [x] exit cap (home keep)
 - [ ] magical contamination variant (later, not base V2)
 
 ## 3.4 Path review checks
@@ -291,3 +291,17 @@ Sprite Set V2 is successful if:
 - enemies read as tiny characters instead of markers,
 - board/UI feel like one world,
 - the whole thing looks obviously better even in a phone screenshot.
+
+
+---
+
+## Demo roster expansion (done for the demo-vs-AI milestone)
+
+Generated in `scripts/generate-handdrawn-art.py`, same stone/wood/brass grammar, accents kept selective:
+- [x] Piercer hero tower — long ballista lance, crimson tip ("committed damage")
+- [x] Beacon shrine — shrine roof with hovering teal orb ("support glow", no weapon read)
+- [x] Swarmling — tiny moss imp, big eyes, reads in clumps
+- [x] Shield Bearer — steel body behind a tower shield with teal rune (shield bar in-game)
+- [x] Moss Warlord boss — 48x40 crowned stone ogre, crimson crown, teal eyes
+- [x] props for blocked tiles (rock cluster, mossy tree), role icons for the new towers
+- [x] pressure raiders marked in-game by a crimson ground ring (Dandadan accent reserved for pressure)

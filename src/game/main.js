@@ -189,7 +189,8 @@ function cancelTool() {
 document.addEventListener('keydown', e => {
   if (e.metaKey || e.ctrlKey || e.altKey) return;
   const k = e.key.toLowerCase();
-  if (app.screen === 'howto' && (k === 'escape' || k === 'enter')) { showScreen(app.match && app.mode !== 'attract' && !app.match.result ? 'playing' : 'title'); return; }
+  if (app.screen === 'howto' && (k === 'escape' || k === 'enter')) { showScreen('title'); return; }
+  if (app.screen === 'title' && k === 'escape' && matchInProgress()) { $('#resumeBtn').click(); return; }
   if (app.screen !== 'playing') return;
   const ti = HOTKEYS.indexOf(k);
   if (ti >= 0 && content.towerOrder[ti]) { selectBuild(content.towerOrder[ti]); return; }
@@ -378,7 +379,13 @@ function showScreen(name) {
   for (const s of ['title', 'howto', 'result']) $(`#screen-${s}`).hidden = s !== name;
   document.body.dataset.screen = name;
   updatePauseBtn();
-  if (name === 'title') { renderDiff(); $('#playBtn').textContent = app.match && app.mode !== 'attract' && !app.match.result ? '⚔ New battle vs AI' : '⚔ Battle vs AI'; }
+  if (name === 'title') {
+    renderDiff();
+    const live = matchInProgress();
+    $('#resumeBtn').hidden = !live;
+    $('#playBtn').classList.toggle('primary', !live);
+    $('#playBtn').textContent = live ? '⚔ New battle vs AI' : '⚔ Battle vs AI';
+  }
 }
 
 function renderDiff() {
@@ -390,10 +397,12 @@ function renderDiff() {
 for (const b of document.querySelectorAll('.diffPick button')) b.onclick = () => { difficulty = b.dataset.diff; try { localStorage.setItem('lil8td.diff', difficulty); } catch { /* storage unavailable */ } audio.unlock(); audio.play('click'); renderDiff(); };
 
 function startGame(mode) { audio.unlock(); audio.play('click'); newMatch(mode); showScreen('playing'); }
+function matchInProgress() { return !!app.match && app.mode !== 'attract' && !app.match.result; }
+$('#resumeBtn').onclick = () => { audio.play('click'); showScreen('playing'); app.paused = false; updatePauseBtn(); };
 $('#playBtn').onclick = () => startGame('versus');
 $('#soloBtn').onclick = () => startGame('solo');
 $('#howBtn').onclick = () => { audio.unlock(); showScreen('howto'); };
-$('#howBack').onclick = () => showScreen(app.match && app.mode !== 'attract' && !app.match.result && app.paused ? 'title' : 'title');
+$('#howBack').onclick = () => showScreen('title');
 $('#rematchBtn').onclick = () => startGame(app.mode === 'solo' ? 'solo' : 'versus');
 $('#resultMenuBtn').onclick = () => { newMatch('attract'); showScreen('title'); };
 $('#versionTag').textContent = `ruleset ${content.ruleset.metadata.version}`;

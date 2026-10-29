@@ -162,7 +162,7 @@ body.solo #pressureSection,body.solo #oppSection{display:none}
 .oppStats .intent{flex-basis:100%;color:#9ad0ff;font-style:italic}
 
 /* ---------- screens */
-.screen{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(6,8,10,.55);backdrop-filter:blur(1.5px);overflow:auto}
+.screen{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(6,8,10,.62);overflow:auto}
 .screen[hidden]{display:none}
 body[data-screen="title"] .panel,body[data-screen="title"] .threats{filter:saturate(.7) brightness(.8)}
 .card{

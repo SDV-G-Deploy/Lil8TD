@@ -4,7 +4,12 @@ Old school pixel-style top-down tower defense game project.
 
 ## Status
 
-Playable browser prototype + visual direction pre-production for Sprite Set V2.
+**Playable demo vs AI.** A complete mirrored-duel match in the browser: title menu with difficulty
+pick, how-to-play, 10 authored waves on a winding map, 5 towers with 3 upgrade levels, 6 raider
+types including a boss, pressure sends both ways, a heuristic AI opponent (Easy / Normal / Hard),
+result screen, synthesized sound, and Sprite Set V2 art. Online 1v1 is the next milestone.
+
+See `docs/DEMO_SCRIPT.md` for the guided walkthrough.
 
 ## Current direction
 
@@ -64,9 +69,27 @@ Machine-readable content:
 - `content/ruleset.v0.json` — first provisional data ruleset for local deterministic simulation
 
 
-## Local playable slice
+## Demo vs AI
 
-A first local-only vertical slice now exists: one fixed-path map, scripted waves, Arrow/Burst/Frost towers, tower placement, upgrades, selling, leaks/lives, win/loss, HUD, and a conservative scripted bot for smoke validation.
+What is in the build:
+
+- **Match model**: mirrored dual-board duel (`MVP_SCOPE_DECISIONS.md`). You and the AI defend identical
+  boards against the same waves; a keep at 0 lives collapses and loses. If both survive, more lives wins.
+- **Map**: *Mossy Switchback*, 12×8 tiles, one winding lane from the rift to your keep.
+- **Towers**: Arrow (baseline), Burst (splash), Frost (slow), Piercer (anti-heavy, cracks shields),
+  Beacon (non-stacking damage aura); each has 3 levels; sell refunds 65%.
+- **Raiders**: Grunt, Runner, Brute, Swarmling, Shield Bearer, Moss Warlord (final-wave boss).
+- **Waves**: 10 template-named waves (Baseline Stream → Warlord) with HP scaling and wave-start payouts.
+- **Pressure**: Grunt Squad / Runner Rush / Brute Drop packs paid in credits, delivered to the opponent
+  after a visible windup, with cooldowns, unlock waves and a queue cap (`PRESSURE_MECHANIC_V0.md`).
+- **AI** (`src/ai/bot.js`): value-per-credit build/upgrade choice scaled by upcoming wave roles,
+  recovery/fortify postures, timed send plans; reads only visible state and issues normal commands.
+- **UI**: HUD, next-wave preview, incoming-pressure warnings, build cards with hotkeys, tower inspector,
+  opponent mini-board with live AI intent, wave banners, FX, WebAudio sound, desktop + mobile layouts.
+- **Practice** mode: solo board, no opponent, same waves.
+
+Controls: `1`–`5` towers · click/tap grass to build · click a tower to inspect · `U` upgrade · `S` sell ·
+`Z` `X` `C` send raiders · `Space` pause · `F` speed 1x/2x/3x · `M` sound · `Esc` cancel / menu.
 
 The current visual workstream is moving from prototype art toward **Sprite Set V2** under the direction:
 
@@ -85,17 +108,31 @@ npm start
 # open http://localhost:4173
 ```
 
-No install step is required; the slice uses browser ES modules and Node built-ins only.
+No install step is required; the game uses browser ES modules and Node built-ins only.
+GitHub Pages deploys the same static files (`.github/workflows/deploy-pages.yml`, on `master`).
 
 ### Verify
 
 ```bash
 npm run build   # static/module sanity check
-npm test        # deterministic sim/unit smoke tests
-npm run smoke   # scripted bot full-match run
+npm test        # deterministic sim, pressure, result-rule and bot tests
+npm run smoke   # solo + bot-vs-bot ladder table (expects 0 rejected commands, every match ends)
 ```
 
-Current smoke expectation: bot reaches a terminal win around tick 3450 with deterministic final hash output.
+### Content and art pipelines
+
+```bash
+node scripts/generate-ruleset.mjs        # rewrite content/ruleset.v0.json from the authoring source
+python3 scripts/generate-handdrawn-art.py # rebuild the Sprite Set V2 atlas (needs Pillow)
+```
+
+### Code map
+
+- `src/sim/` — deterministic simulation: `sim.js` (match/boards/commands/phases), `map.js` (lane geometry),
+  `content.js` (ruleset indexing, wave expansion), `hash.js`, `rng.js` (bot-only PRNG)
+- `src/ai/bot.js` — AI opponent profiles
+- `src/render/` — `renderer.js` (atlas terrain/entities), `fx.js` (client-side effects), `style.css`
+- `src/game/` — `main.js` (screens, input, loop, HUD), `audio.js` (WebAudio synth)
 
 ## Trigger phrase
 
