@@ -53,8 +53,8 @@ Sound is synthesized with WebAudio and starts after the first click; `M` toggles
 - Optional: `3` **Frost** at the start of the lane to slow everything, `5` **Beacon** next to a cluster —
   the teal glow + teal pip shows exactly which towers get the +25% damage.
 
-### 4. Pressure, both ways (≈2 min, waves 3–8)
-- Send raiders with the crimson buttons (`Z` squad, `X` runner rush from wave 3, `C` brutes from wave 5).
+### 4. Pressure, both ways (≈2 min, waves 2–8)
+- Send raiders with the crimson buttons (`Z` squad from wave 2, `X` runner rush from wave 4, `C` brutes from wave 6).
   The pack appears on the AI board after a 6–8 s windup; time it so it lands **just after their next
   wave starts** (the next-wave timer helps).
 - When the AI sends at you: a red **Incoming** alert + countdown bar appears and a chime plays.

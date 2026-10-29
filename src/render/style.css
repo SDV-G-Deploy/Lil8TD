@@ -208,7 +208,7 @@ body[data-screen="title"] .panel,body[data-screen="title"] .threats{filter:satur
   .hud{order:3;flex-basis:100%;justify-content:space-between;gap:4px;font-size:12px}
   .chip{padding:3px 6px}.chip b{font-size:13px}.chip.wave .muted{display:none}
   canvas#game{border-width:4px}
-  .banner{top:6%;padding:6px 14px}.banner .bWave{font-size:20px}.banner .bName{font-size:12px}
+  .banner{top:3%;padding:3px 10px;display:flex;gap:8px;align-items:baseline;white-space:nowrap}.banner .bWave{font-size:15px;text-shadow:2px 2px 0 #27170b}.banner .bWave span{font-size:11px}.banner .bName{font-size:11px;letter-spacing:.06em}.banner .bIcons,.banner .bPay{display:none}
   .alert{font-size:12px;bottom:6px}
   .panel{display:grid;grid-template-columns:1fr;gap:0;padding:8px}
   .towerBtn canvas{width:30px;height:42px}
