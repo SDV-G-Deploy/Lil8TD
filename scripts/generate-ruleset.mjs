@@ -41,12 +41,12 @@ r.enemies = [
   { id:'warlord', name:'Moss Warlord', role:'boss_final_wave', blurb:'Final-wave boss. Leaking it costs 10 lives.', maxHp:4600, maxShield:1000, speedUnitsPerTick:20, rewardCredits:120, leakDamage:10 }
 ];
 r.pressurePacks = [
-  { id:'grunt_squad', name:'Grunt Squad', short:'Squad', costCredits:55, windupTicks:120, cooldownTicks:180, maxQueuedPerSender:2, unlockAtWaveIndex:0, visibleDuringWindup:true,
-    delivery:{ laneId:'main', spawnSource:'pressure', groups:[{ enemyId:'grunt', count:5, firstOffsetTicks:0, intervalTicks:16, rewardCreditsOverride:3 }] } },
-  { id:'runner_rush', name:'Runner Rush', short:'Rush', costCredits:80, windupTicks:120, cooldownTicks:240, maxQueuedPerSender:2, unlockAtWaveIndex:2, visibleDuringWindup:true,
-    delivery:{ laneId:'main', spawnSource:'pressure', groups:[{ enemyId:'runner', count:6, firstOffsetTicks:0, intervalTicks:10, rewardCreditsOverride:3 }] } },
-  { id:'brute_drop', name:'Brute Drop', short:'Brutes', costCredits:150, windupTicks:160, cooldownTicks:360, maxQueuedPerSender:1, unlockAtWaveIndex:4, visibleDuringWindup:true,
-    delivery:{ laneId:'main', spawnSource:'pressure', groups:[{ enemyId:'brute', count:2, firstOffsetTicks:0, intervalTicks:40, rewardCreditsOverride:8 }] } }
+  { id:'grunt_squad', name:'Grunt Squad', short:'Squad', costCredits:40, windupTicks:120, cooldownTicks:180, maxQueuedPerSender:2, unlockAtWaveIndex:0, visibleDuringWindup:true,
+    delivery:{ laneId:'main', spawnSource:'pressure', groups:[{ enemyId:'grunt', count:8, firstOffsetTicks:0, intervalTicks:12, rewardCreditsOverride:1 }] } },
+  { id:'runner_rush', name:'Runner Rush', short:'Rush', costCredits:60, windupTicks:120, cooldownTicks:240, maxQueuedPerSender:2, unlockAtWaveIndex:2, visibleDuringWindup:true,
+    delivery:{ laneId:'main', spawnSource:'pressure', groups:[{ enemyId:'runner', count:8, firstOffsetTicks:0, intervalTicks:9, rewardCreditsOverride:1 }] } },
+  { id:'brute_drop', name:'Brute Drop', short:'Brutes', costCredits:110, windupTicks:160, cooldownTicks:360, maxQueuedPerSender:1, unlockAtWaveIndex:4, visibleDuringWindup:true,
+    delivery:{ laneId:'main', spawnSource:'pressure', groups:[{ enemyId:'brute', count:3, firstOffsetTicks:0, intervalTicks:36, rewardCreditsOverride:3 }] } }
 ];
 const G = (enemyId, count, firstOffsetTicks, intervalTicks) => ({ enemyId, count, firstOffsetTicks, intervalTicks, laneId:'main' });
 const W = [
@@ -57,11 +57,11 @@ const W = [
   ['Bait-and-Punch', 100, [G('runner',8,0,16), G('shielded',4,120,40)]],
   ['Swarm Clump II', 110, [G('swarmling',26,0,7), G('brute',2,120,80), G('grunt',6,200,20)]],
   ['Pressure Window', 120, [G('grunt',12,0,18), G('runner',8,60,16), G('shielded',4,160,36)]],
-  ['Heavy Anchor II', 130, [G('brute',4,0,60), G('shielded',6,40,34), G('runner',8,200,14)]],
-  ['Cleanup Tail', 150, [G('grunt',14,0,14), G('swarmling',24,80,6), G('brute',3,150,60), G('runner',10,260,12)]],
+  ['Heavy Anchor II', 140, [G('brute',3,0,70), G('shielded',5,40,36), G('runner',8,200,14)]],
+  ['Cleanup Tail', 160, [G('grunt',12,0,16), G('swarmling',22,80,6), G('brute',2,150,70), G('runner',10,260,12)]],
   ['Warlord', 170, [G('shielded',4,0,30), G('warlord',1,120,1), G('grunt',10,150,16), G('swarmling',20,240,6)]]
 ];
-const SCALE = [100,105,112,123,136,150,166,183,200,220];
+const SCALE = [100,105,113,124,136,148,160,172,186,202];
 let t = 200;
 r.waves = W.map(([template, payout, groups], i) => { const w = { waveIndex:i, template, startTick:t, hpScalePercent: SCALE[i], payoutOnStartCredits: i === 0 ? 0 : payout, groups }; t += i < 3 ? 480 : 560; return w; });
 r.wavePhases = [

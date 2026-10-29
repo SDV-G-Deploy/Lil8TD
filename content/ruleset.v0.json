@@ -381,7 +381,7 @@
       "id": "grunt_squad",
       "name": "Grunt Squad",
       "short": "Squad",
-      "costCredits": 55,
+      "costCredits": 40,
       "windupTicks": 120,
       "cooldownTicks": 180,
       "maxQueuedPerSender": 2,
@@ -393,10 +393,10 @@
         "groups": [
           {
             "enemyId": "grunt",
-            "count": 5,
+            "count": 8,
             "firstOffsetTicks": 0,
-            "intervalTicks": 16,
-            "rewardCreditsOverride": 3
+            "intervalTicks": 12,
+            "rewardCreditsOverride": 1
           }
         ]
       }
@@ -405,7 +405,7 @@
       "id": "runner_rush",
       "name": "Runner Rush",
       "short": "Rush",
-      "costCredits": 80,
+      "costCredits": 60,
       "windupTicks": 120,
       "cooldownTicks": 240,
       "maxQueuedPerSender": 2,
@@ -417,10 +417,10 @@
         "groups": [
           {
             "enemyId": "runner",
-            "count": 6,
+            "count": 8,
             "firstOffsetTicks": 0,
-            "intervalTicks": 10,
-            "rewardCreditsOverride": 3
+            "intervalTicks": 9,
+            "rewardCreditsOverride": 1
           }
         ]
       }
@@ -429,7 +429,7 @@
       "id": "brute_drop",
       "name": "Brute Drop",
       "short": "Brutes",
-      "costCredits": 150,
+      "costCredits": 110,
       "windupTicks": 160,
       "cooldownTicks": 360,
       "maxQueuedPerSender": 1,
@@ -441,10 +441,10 @@
         "groups": [
           {
             "enemyId": "brute",
-            "count": 2,
+            "count": 3,
             "firstOffsetTicks": 0,
-            "intervalTicks": 40,
-            "rewardCreditsOverride": 8
+            "intervalTicks": 36,
+            "rewardCreditsOverride": 3
           }
         ]
       }
@@ -494,7 +494,7 @@
       "waveIndex": 2,
       "template": "Swarm Clump",
       "startTick": 1160,
-      "hpScalePercent": 112,
+      "hpScalePercent": 113,
       "payoutOnStartCredits": 80,
       "groups": [
         {
@@ -517,7 +517,7 @@
       "waveIndex": 3,
       "template": "Heavy Anchor",
       "startTick": 1640,
-      "hpScalePercent": 123,
+      "hpScalePercent": 124,
       "payoutOnStartCredits": 90,
       "groups": [
         {
@@ -563,7 +563,7 @@
       "waveIndex": 5,
       "template": "Swarm Clump II",
       "startTick": 2760,
-      "hpScalePercent": 150,
+      "hpScalePercent": 148,
       "payoutOnStartCredits": 110,
       "groups": [
         {
@@ -593,7 +593,7 @@
       "waveIndex": 6,
       "template": "Pressure Window",
       "startTick": 3320,
-      "hpScalePercent": 166,
+      "hpScalePercent": 160,
       "payoutOnStartCredits": 120,
       "groups": [
         {
@@ -623,21 +623,21 @@
       "waveIndex": 7,
       "template": "Heavy Anchor II",
       "startTick": 3880,
-      "hpScalePercent": 183,
-      "payoutOnStartCredits": 130,
+      "hpScalePercent": 172,
+      "payoutOnStartCredits": 140,
       "groups": [
         {
           "enemyId": "brute",
-          "count": 4,
+          "count": 3,
           "firstOffsetTicks": 0,
-          "intervalTicks": 60,
+          "intervalTicks": 70,
           "laneId": "main"
         },
         {
           "enemyId": "shielded",
-          "count": 6,
+          "count": 5,
           "firstOffsetTicks": 40,
-          "intervalTicks": 34,
+          "intervalTicks": 36,
           "laneId": "main"
         },
         {
@@ -653,28 +653,28 @@
       "waveIndex": 8,
       "template": "Cleanup Tail",
       "startTick": 4440,
-      "hpScalePercent": 200,
-      "payoutOnStartCredits": 150,
+      "hpScalePercent": 186,
+      "payoutOnStartCredits": 160,
       "groups": [
         {
           "enemyId": "grunt",
-          "count": 14,
+          "count": 12,
           "firstOffsetTicks": 0,
-          "intervalTicks": 14,
+          "intervalTicks": 16,
           "laneId": "main"
         },
         {
           "enemyId": "swarmling",
-          "count": 24,
+          "count": 22,
           "firstOffsetTicks": 80,
           "intervalTicks": 6,
           "laneId": "main"
         },
         {
           "enemyId": "brute",
-          "count": 3,
+          "count": 2,
           "firstOffsetTicks": 150,
-          "intervalTicks": 60,
+          "intervalTicks": 70,
           "laneId": "main"
         },
         {
@@ -690,7 +690,7 @@
       "waveIndex": 9,
       "template": "Warlord",
       "startTick": 5000,
-      "hpScalePercent": 220,
+      "hpScalePercent": 202,
       "payoutOnStartCredits": 170,
       "groups": [
         {

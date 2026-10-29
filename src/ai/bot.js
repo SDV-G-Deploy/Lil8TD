@@ -17,15 +17,15 @@ import { canPlaceTower, pressureBlockReason, tileKind } from '../sim/sim.js';
 export const BOT_PROFILES = {
   easy: {
     label: 'Easy', personality: 'Stable Defender', cadence: 30, idleChance: 0.25, noise: 0.9, tilePick: 5,
-    allow: ['arrow', 'burst', 'frost', 'piercer'], maxLevel: 2, pressure: 0.08, pressureFromWave: 4, saveRatio: 0.85, reserve: 0
+    allow: ['arrow', 'burst', 'frost', 'piercer'], maxLevel: 2, pressure: 0.12, pressureFromWave: 3, saveRatio: 0.85, reserve: 0
   },
   normal: {
     label: 'Normal', personality: 'Tempo Aggressor', cadence: 14, idleChance: 0.06, noise: 0.35, tilePick: 2,
-    allow: ['arrow', 'burst', 'frost', 'piercer', 'beacon'], maxLevel: 3, pressure: 0.35, pressureFromWave: 2, saveRatio: 0.7, reserve: 20
+    allow: ['arrow', 'burst', 'frost', 'piercer', 'beacon'], maxLevel: 3, pressure: 0.3, pressureFromWave: 2, saveRatio: 0.7, reserve: 20, reactive: false
   },
   hard: {
-    label: 'Hard', personality: 'Greedy Scaler', cadence: 5, idleChance: 0, noise: 0, tilePick: 1,
-    allow: ['arrow', 'burst', 'frost', 'piercer', 'beacon'], maxLevel: 3, pressure: 0.6, pressureFromWave: 1, saveRatio: 0.6, reserve: 30
+    label: 'Hard', personality: 'Greedy Scaler', cadence: 5, idleChance: 0, noise: 0.15, tilePick: 1,
+    allow: ['arrow', 'burst', 'frost', 'piercer', 'beacon'], maxLevel: 3, pressure: 0.6, pressureFromWave: 1, saveRatio: 0.6, reserve: 30, reactive: true
   }
 };
 
@@ -49,7 +49,7 @@ function tilesFor(bot, content) {
 }
 
 /** What the current and next wave ask for: body-count shares for swarm/fast, HP share for heavy. */
-export function threatProfile(match, content) {
+export function threatProfile(match, content, board = null) {
   const idx = Math.max(0, match.wavesStarted - 1);
   const waves = content.waves.slice(idx, idx + 2);
   let bodies = 0, hpTotal = 0, swarm = 0, heavy = 0, fast = 0, shield = 0;
@@ -61,6 +61,13 @@ export function threatProfile(match, content) {
     if (e.speedUnitsPerTick >= 70) fast += g.count;
     if (e.maxHp >= 400 || e.maxShield) heavy += hp;
     if (e.maxShield) shield += hp;
+  }
+  // visible incoming pressure packs count double: they arrive on top of the wave
+  for (const inc of board?.incoming ?? []) for (const g of content.pressurePacks[inc.packId].delivery.groups) {
+    const e = content.enemies[g.enemyId]; const hp = e.maxHp * g.count * 2;
+    bodies += g.count * 2; hpTotal += hp;
+    if (e.speedUnitsPerTick >= 70) fast += g.count * 2;
+    if (e.maxHp >= 400) heavy += hp;
   }
   bodies = Math.max(1, bodies); hpTotal = Math.max(1, hpTotal);
   return { swarm: swarm / bodies, fast: fast / bodies, heavy: Math.min(0.6, heavy / hpTotal), shield: Math.min(0.5, shield / hpTotal) };
@@ -117,7 +124,7 @@ function auraFor(t, towers, content) {
 }
 
 function candidateActions(bot, b, match, content) {
-  const p = bot.profile; const cache = tilesFor(bot, content); const threat = threatProfile(match, content);
+  const p = bot.profile; const cache = tilesFor(bot, content); const threat = threatProfile(match, content, p.reactive ? b : null);
   const free = cache.tiles.filter(t => canPlaceTower(b, t.x, t.y, content).ok);
   const actions = [];
   for (const type of p.allow) {
@@ -149,42 +156,92 @@ export function botCommands(bot, match, content) {
   if (p.idleChance && nextFloat(bot.rng) < p.idleChance) return [];
 
   // posture: recover after leaks, fortify against visible incoming pressure
-  if (b.stats.leaks > bot.lastLeaks) { bot.recoverUntil = match.tick + 400; bot.lastLeaks = b.stats.leaks; }
+  if (b.stats.leaks > bot.lastLeaks) { bot.recoverUntil = match.tick + 240; bot.lastLeaks = b.stats.leaks; }
   bot.posture = match.tick < bot.recoverUntil ? 'recover' : b.incoming.length ? 'fortify' : 'stable';
 
-  // Pressure windows first: a send that lands inside the opponent's next wave is worth more
-  // than a marginal upgrade, as long as our own board is stable.
-  const windowSend = maybePressure(bot, match, content, 0, true);
-  if (windowSend) return [windowSend];
+  // Pressure intent: once per upcoming wave decide whether to send, bank the pack cost, then
+  // fire so the pack lands shortly after the opponent's wave starts (a pressure window).
+  const plan = updateSendPlan(bot, match, content);
+  if (plan?.fire) return [plan.fire];
+  // reactive profiles stop banking and spend everything when a send is visibly incoming
+  const banked = plan && !(p.reactive && bot.posture === 'fortify') ? content.pressurePacks[plan.packId].costCredits : 0;
 
   const actions = candidateActions(bot, b, match, content);
   const best = actions[0];
-  if (best && b.currency < best.cost) {
-    if (bot.posture === 'stable' && b.currency >= best.cost * p.saveRatio) {
-      const send = maybePressure(bot, match, content, best.cost);
+  if (best && b.currency - banked < best.cost) {
+    if ((bot.posture === 'stable' || !p.reactive) && b.currency - banked >= best.cost * p.saveRatio) {
+      const send = null;
       if (send) return [send];
       bot.intent = `save for ${best.type ?? best.t.typeId + ' upgrade'}`;
       return [];
     }
   }
   for (const a of actions) {
-    if (b.currency < a.cost) continue;
+    if (b.currency - banked < a.cost) continue;
     if (a.score < best.score * 0.35 && bot.posture === 'stable') break;
     if (a.kind === 'build') { bot.intent = `build ${a.type}`; return [cmd(bot, { type: 'tower.build', towerType: a.type, x: a.tile.x, y: a.tile.y })]; }
     bot.intent = `upgrade ${a.t.typeId}`;
     return [cmd(bot, { type: 'tower.upgrade', towerId: a.t.id })];
   }
-  const send = maybePressure(bot, match, content, 0);
+  if (plan) { bot.intent = `banking for ${content.pressurePacks[plan.packId].name}`; return []; }
+  // only the hard profile converts idle surplus into extra opportunistic sends
+  const send = p.reactive && b.currency > 250 ? maybePressure(bot, match, content, 0, true) : null;
   if (send) return [send];
   bot.intent = 'hold';
   return [];
+}
+
+const SEND_LAND_OFFSET = 60; // ticks after the opponent's wave start
+
+function updateSendPlan(bot, match, content) {
+  const p = bot.profile; const b = match.boards[bot.slot];
+  if (match.mode !== 'versus') return null;
+  const nw = content.waves[match.wavesStarted];
+  if (!nw) return null;
+  if (!bot.sendPlan || bot.sendPlan.waveIndex !== nw.waveIndex) {
+    let packId = null;
+    if (match.wavesStarted > p.pressureFromWave && nextFloat(bot.rng) < p.pressure) packId = choosePack(bot, match, content);
+    bot.sendPlan = { waveIndex: nw.waveIndex, packId };
+  }
+  const plan = bot.sendPlan;
+  if (!plan.packId) return null;
+  // recovery discipline: abandon the plan while bleeding badly
+  if ((bot.posture === 'recover' && b.lives < 12) || (bot.posture !== 'stable' && bot.difficulty === 'easy')) { plan.packId = null; return null; }
+  const pack = content.pressurePacks[plan.packId];
+  const sendTick = nw.startTick + SEND_LAND_OFFSET - pack.windupTicks;
+  if (match.tick > sendTick + 60) { plan.packId = null; return null; }
+  if (match.tick >= sendTick && !pressureBlockReason(match, bot.slot, plan.packId, content)) {
+    const fire = cmd(bot, { type: 'pressure.send', packId: plan.packId });
+    bot.intent = `pressure ${pack.name}`;
+    plan.packId = null;
+    return { fire };
+  }
+  return plan;
+}
+
+function choosePack(bot, match, content) {
+  const opp = match.boards[1 - bot.slot];
+  const oppHas = t => opp.towers.some(x => x.typeId === t);
+  const unlockedBy = id => match.wavesStarted + 1 > (content.pressurePacks[id].unlockAtWaveIndex ?? 0);
+  const scored = ['brute_drop', 'runner_rush', 'grunt_squad'].filter(unlockedBy).map(id => {
+    let score = 1 + nextFloat(bot.rng);
+    if (id === 'brute_drop') score += oppHas('piercer') ? 0 : 2;
+    if (id === 'runner_rush') score += oppHas('frost') ? 0 : 1.2;
+    if (id === 'grunt_squad') score += oppHas('burst') ? 0 : 1;
+    return { id, score };
+  }).sort((a, c) => c.score - a.score || a.id.localeCompare(c.id));
+  return scored[0]?.id ?? null;
 }
 
 function cmd(bot, c) { return { ...c, playerSlot: bot.slot, clientCommandSeq: bot.seq++ }; }
 
 function maybePressure(bot, match, content, reserveForPlan, windowOnly = false) {
   const p = bot.profile;
-  if (match.mode !== 'versus' || bot.posture !== 'stable') return null;
+  if (match.mode !== 'versus') return null;
+  const b0 = match.boards[bot.slot];
+  // recovery discipline: no offensive spend while bleeding badly; cautious profiles also hold under incoming pressure
+  if (bot.posture === 'recover' && b0.lives < 12) return null;
+  if (bot.posture !== 'stable' && bot.difficulty === 'easy') return null;
   if (match.wavesStarted <= p.pressureFromWave) return null;
   const b = match.boards[bot.slot];
   const opp = match.boards[1 - bot.slot];

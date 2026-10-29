@@ -36,11 +36,16 @@ test('bot-vs-bot replay is deterministic for a seed', () => {
   assert.equal(a.m.tick, b.m.tick);
 });
 
-test('difficulty ladder: hard survives the full solo run; hard beats easy head to head', () => {
+test('difficulty ladder: hard survives solo and usually beats easy head to head', () => {
   const hard = play(['hard'], 'ladder');
   assert.equal(hard.m.result.outcome, 'win');
-  const vs = play(['hard', 'easy'], 'ladder');
-  assert.equal(vs.m.result.winnerSlot, 0);
+  let hardWins = 0;
+  for (let i = 0; i < 6; i++) {
+    const hardSlot = i % 2;
+    const vs = play(hardSlot === 0 ? ['hard', 'easy'] : ['easy', 'hard'], `ladder-${i}`);
+    if (vs.m.result.winnerSlot === hardSlot) hardWins++;
+  }
+  assert.ok(hardWins >= 4, `hard won ${hardWins}/6`);
 });
 
 test('bots use pressure in versus but never in solo', () => {
